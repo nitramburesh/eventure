@@ -12,7 +12,7 @@ import {
 import axios from "axios";
 import { apiUrl } from "../atoms";
 import { useRecoilValue } from "recoil";
-import { redirectTo } from "../utils/Utils";
+import {valuesAreEmpty} from "../utils/Utils";
 import { useNavigate } from "react-router-dom";
 import {
   errorHeading,
@@ -25,7 +25,7 @@ function SignupPage(props) {
   const baseApiUrl = useRecoilValue(apiUrl);
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState(false);
+  const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
   const navigate = useNavigate();
 
@@ -40,18 +40,20 @@ function SignupPage(props) {
       username: username,
       password: password,
     };
-    try {
+    if(valuesAreEmpty([username, password])) {
+      setError("Values cannot be empty")
+    }else{try {
       await axios
-        .post(baseApiUrl + "register", newUser)
-        .then(() => redirectToHomepage());
+          .post(baseApiUrl + "register", newUser)
+          .then(() => redirectToHomepage());
     } catch (error) {
-      setError(true);
-    }
+      setError("User with this name already exists.");
+    }}
   };
   const heading = error ? (
-    errorHeading("Error!", "User with this name already exists.")
+    errorHeading("Error!", error)
   ) : (
-    <Heading> Please sign up.</Heading>
+    normalHeading("Sign up", "Enter your credentials.")
   );
 
   return (
@@ -66,7 +68,7 @@ function SignupPage(props) {
             placeholder="Enter your username..."
             onChange={(event) => {
               setUsername(event.target.value);
-              setError(false);
+              setError("");
             }}
           />
           <FormLabel htmlFor="password">Password</FormLabel>
@@ -74,10 +76,12 @@ function SignupPage(props) {
             id="password"
             type="password"
             placeholder="Enter your password..."
-            onChange={(event) => setPassword(event.target.value)}
+            onChange={(event) => {
+              setPassword(event.target.value); setError("")
+            }}
           />
         </FormControl>
-        <Button colorScheme="teal" rounded="full" onClick={handleSignup}>
+        <Button colorScheme="teal" rounded="lg" onClick={handleSignup}>
           Sign up
         </Button>
       </VStack>

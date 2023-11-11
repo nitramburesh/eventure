@@ -41,17 +41,17 @@ function LoginPage(props) {
       password: password,
     };
     try {
-      await axios.post(baseApiUrl + "login", loginData).then(({ data }) => {
+      await axios.post(baseApiUrl + "login", loginData, {withCredentials: true}).then(({ data }) => {
         const loggedInUser = { id: data.id, username: data.username };
         setUser(loggedInUser);
         console.log(user);
-        localStorage.setItem("token", data.token);
+        localStorage.setItem("token", document.cookie);
         localStorage.setItem("user", JSON.stringify(loggedInUser));
         redirectToHomePage();
         setSuccess(true);
       });
     } catch (error) {
-      setError(true);
+      setError(error);
     }
   };
   const showHeading = () => {
@@ -66,7 +66,7 @@ function LoginPage(props) {
 
   return (
     <Center mt="100px">
-      <VStack minWidth="40%" justifySelf="center" spacing="30px">
+      <VStack width="100%" maxWidth="500px" justifySelf="center" spacing="30px">
         {showHeading()}
         <FormControl isRequired>
           <FormLabel htmlFor="email">Email address</FormLabel>
@@ -96,8 +96,7 @@ function LoginPage(props) {
         </FormControl>
         <Button
           colorScheme="teal"
-          rounded="full"
-          width="50%"
+          rounded="lg"
           onClick={handleLogin}
           isLoading={success}
         >

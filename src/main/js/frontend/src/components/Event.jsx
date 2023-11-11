@@ -3,12 +3,10 @@ import {
   Heading,
   Box,
   Image,
-  Divider,
   Link,
   Text,
   Wrap,
   WrapItem,
-  Center,
   HStack,
   Tag,
 } from "@chakra-ui/react";
@@ -61,15 +59,11 @@ function Event({ props }) {
               <Link
                 textDecoration="none"
                 _hover={{ textDecoration: "none" }}
-                href={`/fullArticle/${props._id}`}
+                href={`/event/${props.id}`}
               >
                 <Image
                   transform="scale(1.0)"
-                  src={
-                    props.photo === ""
-                      ? "https://images.unsplash.com/photo-1648737153811-69a6d8c528bf?ixlib=rb-1.2.1&ixid=MnwxMjA3fDF8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=2670&q=80"
-                      : props.photo
-                  }
+                  src={"https://images.unsplash.com/photo-1698778874316-84d21debbc61?auto=format&fit=crop&q=80&w=3570&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"}
                   alt="cover photo"
                   objectFit="contain"
                   width="100%"
@@ -85,7 +79,7 @@ function Event({ props }) {
               <Link
                 textDecoration="none"
                 _hover={{ textDecoration: "none" }}
-                href="/fullArticle"
+                href="/Users/bures/Documents/Personal/Eventure/src/main/js/frontend/src/pages/FullEventView"
               >
                 {props.title}
               </Link>
@@ -95,7 +89,7 @@ function Event({ props }) {
             </Text>
             <BlogAuthor
               name={props.username}
-              date={new Date(props.createdAt)}
+              date={new Date(props.date)}
             />
           </Box>
         </WrapItem>

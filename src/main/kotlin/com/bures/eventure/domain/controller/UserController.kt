@@ -5,6 +5,8 @@ import com.bures.eventure.repository.UserRepository
 import org.bson.types.ObjectId
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.http.ResponseEntity
+import org.springframework.security.access.prepost.PreAuthorize
+import org.springframework.web.bind.annotation.CrossOrigin
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
@@ -31,11 +33,4 @@ class UserController(private val userRepository: UserRepository) {
         }
 
     }
-
-//    @PostMapping("register")
-//    fun register(@RequestBody user: User): ResponseEntity<User> {
-//        return ResponseEntity.ok(this.userRepository.insert(user))
-//
-//
-//    }
 }

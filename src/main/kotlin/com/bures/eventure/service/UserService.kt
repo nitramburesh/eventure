@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service
 @Service
 class UserService(private val userRepository: UserRepository) {
     fun save(user : User):User{
+
         return userRepository.insert(user)
     }
     fun findByUsername(username: String): User?{

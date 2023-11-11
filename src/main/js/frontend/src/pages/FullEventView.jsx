@@ -11,35 +11,47 @@ import {
 } from "@chakra-ui/react";
 import { useParams } from "react-router-dom";
 import axios from "axios";
+import { apiUrl } from "../atoms";
+import {useRecoilValue} from "recoil";
 
-function FullArticle(props) {
-  const [article, setArticle] = useState({});
+function FullEventView(props) {
+  const [event, setEvent] = useState({});
   const { id } = useParams();
+  const baseApiUrl = useRecoilValue(apiUrl);
+
+
   useEffect(() => {
     try {
       axios
-        .get(`http://localhost:5000/api/posts/${id}`)
-        .then((res) => setArticle(res.data));
+        .get(baseApiUrl + `events/${id}`)
+        .then((res) => {
+          setEvent(res.data);
+          console.log(res.data)
+        });
     } catch (error) {
       console.log(error);
     }
   }, []);
+  const location = event.location?.city + ", " + event.location?.streetAddress
   return (
     <Center>
       <VStack width="80%" justifySelf="center" spacing="30px" mt="50px">
         <Image
-          src={article.photo}
+          // src={event.image}
+            src="https://images.unsplash.com/photo-1531058020387-3be344556be6?q=80&w=3570&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
           w="100%"
           h={{ base: "150px", md: " 300px" }}
           objectFit="cover"
         />
-        <Heading>This is the article heading</Heading>
-        <Text textAlign="justify">{article.description}</Text>
+        <VStack width="80%" spacing="30px">
+        <Heading>{event.title}</Heading>
+        <Heading as={"h2"} size={"l"}>{location}</Heading>
+        <Text textAlign="justify">{event.description}</Text>
         <HStack spacing={2} marginTop="30px">
-          {article?.categories?.map((category) => {
+          {event?.tags?.map((category) => {
             return (
               <Tag size={"md"} variant="solid" colorScheme="orange">
-                {category}
+                {"#" + category}
               </Tag>
             );
           })}
@@ -52,14 +64,15 @@ function FullArticle(props) {
               src="https://100k-faces.glitch.me/random-image"
               alt-="avatar"
             />
-            <Text fontWeight="medium">{article.username}</Text>
+            <Text fontWeight="medium">{event.username}</Text>
             <Text>—</Text>
-            <Text>{new Date(article.createdAt).toLocaleDateString()}</Text>
+            <Text>{new Date(event.date).toLocaleDateString()}</Text>
           </HStack>
         </Box>
+        </VStack>
       </VStack>
     </Center>
   );
 }
 
-export default FullArticle;
+export default FullEventView;

@@ -20,25 +20,30 @@ import { useDisclosure } from "@chakra-ui/react";
 import { useRef } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faXmark, faBars } from "@fortawesome/free-solid-svg-icons";
-import { useRecoilState } from "recoil";
-import { userState } from "../atoms";
+import {useRecoilState, useRecoilValue} from "recoil";
+import {apiUrl, userState} from "../atoms";
+import axios from "axios";
+
 
 function Navbar() {
+  const baseApiUrl = useRecoilValue(apiUrl);
   const [isMobile] = useMediaQuery("(max-width: 768px)");
   const [loggedIn, setLoggedIn] = useState(false);
   const [user, setUser] = useRecoilState(userState);
   const { isOpen, onOpen, onClose } = useDisclosure();
   const btnRef = useRef();
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    await axios.post(baseApiUrl + "logout",{}, {withCredentials: true })
+    await localStorage.clear();
     onClose();
     setUser(null);
-    localStorage.clear();
+
   };
   const loggedInLinks = (
     <>
       <Link to="/createEvent" onClick={onClose}>
-        NEW ARTICLE
+        NEW EVENT
       </Link>
       <Link to="/" onClick={handleLogout}>
         LOG OUT

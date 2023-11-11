@@ -6,8 +6,10 @@ import org.springframework.data.mongodb.core.mapping.DBRef
 import org.springframework.data.mongodb.core.mapping.Document
 import org.springframework.data.mongodb.core.mapping.MongoId
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
+import org.springframework.stereotype.Component
 
 @Document(collection = "users")
+@Component
 class User {
     @Id
     var id: ObjectId = ObjectId.get()

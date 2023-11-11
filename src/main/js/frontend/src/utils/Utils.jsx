@@ -42,3 +42,7 @@ export const successHeading = (heading, description) => (
 export const handleUploadClick = (inputFile) => {
   inputFile.current.click();
 };
+
+export const valuesAreEmpty = (values) =>{
+   return values.includes("")
+}

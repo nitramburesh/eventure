@@ -19,7 +19,7 @@ export default function Homepage() {
 
   const fetchAllEvents = async () => {
     try {
-      await axios.get("http://localhost:8080/api/v1/events/all").then((res) => {
+      await axios.get("http://localhost:8080/api/v1/events/all", {withCredentials: true}).then((res) => {
         setEvents(res.data);
         setHideButton(true);
       });
@@ -29,7 +29,7 @@ export default function Homepage() {
   };
   useEffect(() => {
     try {
-      axios.get("http://localhost:8080/api/v1/events?amount=4").then((res) => {
+      axios.get("http://localhost:8080/api/v1/events?amount=4", {withCredentials: true}).then((res) => {
         setEvents(res.data);
       });
     } catch (error) {
@@ -42,7 +42,7 @@ export default function Homepage() {
       <Hero />
       <Center>
         <Heading as="h2" marginTop="5">
-          Latest articles
+          Latest events
         </Heading>
       </Center>
       <Divider />

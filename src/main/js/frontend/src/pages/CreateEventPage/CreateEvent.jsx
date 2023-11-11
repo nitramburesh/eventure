@@ -1,4 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
+
+import "flatpickr/dist/themes/material_green.css";
 import {
   Center,
   Box,
@@ -25,27 +27,31 @@ import {
   successHeading,
   normalHeading,
   handleUploadClick,
-  redirectTo,
 } from "../../utils/Utils";
-
+import Flatpickr from "react-flatpickr";
+import '../../flatpickr.css'
 function CreateEvent(props) {
+  const datepickerRef = useRef()
   const defaultInputValue = { value: "" };
   const baseApiUrl = useRecoilValue(apiUrl);
   const [user, setUser] = useRecoilState(userState);
   const [titleImage, setTitleImage] = useState("");
   const [event, setEvent] = useState({
-    name: defaultInputValue,
+    title: defaultInputValue,
     price: defaultInputValue,
     city: defaultInputValue,
     postalCode: defaultInputValue,
     streetAddress: defaultInputValue,
     description: defaultInputValue,
+    eventDate: defaultInputValue
   });
+  const [date, setDate] = useState()
   const [tag, setTag] = useState("");
   const [addedTags, setAddedTags] = useState([]);
   const [preview, setPreview] = useState();
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState(false);
+
   const [isImageSelected, setIsImageSelected] = useState(false);
   const inputFile = useRef(null);
   const navigate = useNavigate();
@@ -87,13 +93,14 @@ function CreateEvent(props) {
     validateInputs();
     const objectList = Object.values(event);
     const errorList = objectList.map((object) => object.error);
-    const isValid = !errorList.includes(undefined) && !errorList.includes(true);
-    return isValid;
+    return !errorList.includes(undefined) && !errorList.includes(true);
   };
   const handleSubmit = async () => {
+    const formData = new FormData();
+    formData.append('image', titleImage);
     const data = {
-      creatorId: "placeholderID",
-      name: event.name.value,
+      creatorId: user.id,
+      title: event.title.value,
       price: event.price.value,
       location: {
         city: event.city.value,
@@ -102,7 +109,10 @@ function CreateEvent(props) {
       },
       description: event.description.value,
       tags: addedTags,
-      date: new Date(),
+      createdDate: new Date(),
+      eventDate: date,
+      image: formData,
+
     };
 
     if (areInputsValid()) {
@@ -113,45 +123,8 @@ function CreateEvent(props) {
           setSuccess(true);
         })
         .catch(() => setError(true));
-      // .catch(setError(true))
-      // .then(setSuccess(true));
     }
-    // const token = localStorage.getItem("token");
-    // const config = {
-    //   headers: { Authorization: `Bearer ${token}` },
-    // };
 
-    // event.preventDefault();
-    // if (title.length < 5 || description.length < 5) {
-    //   setError(true);
-    // } else {
-    //   const newEvent = {
-    //     username: user.username,
-    //     title: title,
-    //     description: description,
-    //   };
-    //   if (titleImage) {
-    //     const data = new FormData();
-    //     const filename = Date.now() + titleImage.name;
-    //     data.append("name", filename);
-    //     data.append("file", titleImage);
-    //     newPost.photo = filename;
-    //     try {
-    //       await axios
-    //         .post("http://localhost:5000/api/upload", newPost, config)
-    //         .then((res) => console.log("image saved"));
-    //     } catch (error) {
-    //       setError(true);
-    //     }
-    //   }
-    //   try {
-    //     await axios
-    //       .post("http://localhost:5000/api/posts", newPost, config)
-    //       .then(setSuccess(true), redirectToHomepage());
-    //   } catch (error) {
-    //     setError(true);
-    //   }
-    // }
   };
 
   const showHeading = () => {
@@ -182,15 +155,15 @@ function CreateEvent(props) {
             {isImageSelected && <Image src={preview} rounded="xl" />}
             <FormControl>
               <VStack gap="1" align="left">
-                <FormLabel htmlFor="name">Name</FormLabel>
+                <FormLabel htmlFor="title">Title</FormLabel>
                 <Input
-                  isInvalid={event.name.error}
+                  isInvalid={event.title.error}
                   placeholder="Your event name goes here!"
-                  id="name"
+                  id="title"
                   type="text"
                   onChange={(event) => {
                     updateEvent({
-                      name: { value: event.target.value, error: false },
+                      title: { value: event.target.value, error: false },
                     });
                   }}
                 />
@@ -253,12 +226,14 @@ function CreateEvent(props) {
                   isInvalid={event.description.error}
                   id="description"
                   type="text"
+                  height="300px"
                   onChange={(event) => {
                     updateEvent({
                       description: { value: event.target.value, error: false },
                     });
                   }}
                 />
+
                 <HStack>
                   <VStack>
                     <FormLabel htmlFor="price">Price</FormLabel>
@@ -271,7 +246,7 @@ function CreateEvent(props) {
                       />
                       <Input
                         isInvalid={event.price.error}
-                        placeholder="Enter price..."
+                        placeholder="Price..."
                         type="number"
                         min="1"
                         id="price"
@@ -283,12 +258,13 @@ function CreateEvent(props) {
                       />
                     </InputGroup>
                   </VStack>
-                  <VStack w="full">
+
+                  <VStack w="50%">
                     <FormLabel htmlFor="tags">Tags</FormLabel>
                     <HStack w="full">
                       <Input
                         type="text"
-                        placeholder="Enter tags and add them with button..."
+                        placeholder="Enter tags..."
                         value={tag}
                         id="tags"
                         onChange={(event) => {
@@ -310,8 +286,38 @@ function CreateEvent(props) {
                       </Button>
                     </HStack>
                   </VStack>
+                  <VStack w="full">
+                    <FormLabel htmlFor="date">Date</FormLabel>
+                    <HStack w="full">
+                      <Flatpickr
+                          value={date}
+                          data-enable-time
+                          onChange={([date]) => {
+                            updateEvent({
+                              defaultInputValue: {
+                                value: date.toISOString(),
+                                error: false,
+                              }});
+                          }}
+
+                          options={{
+                            altInput: true,
+                            altFormat: "F j, Y at H:i",
+                            dateFormat: "Z",
+
+                          }}
+                          placeholder="No date selected..."
+                          ref={datepickerRef}
+
+
+                      >
+                      </Flatpickr>
+                      <Button  onClick={() => datepickerRef.current.flatpickr.open()}>+</Button>
+                    </HStack>
+
+                  </VStack>
                 </HStack>
-                <HStack>
+                <HStack >
                   {addedTags.map((tag) => (
                     <Button
                       p={2}

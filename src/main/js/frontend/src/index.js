@@ -9,7 +9,6 @@ import LoginPage from "./pages/LoginPage";
 import PostsPage from "./pages/PostsPage";
 import NotFoundPage from "./pages/NotFoundPage";
 import CreateEvent from "./pages/CreateEventPage/CreateEvent";
-import FullArticle from "./pages/FullArticle";
 
 import Navbar from "../src/components/Navbar";
 import Footer from "../src/components/Footer";
@@ -17,6 +16,7 @@ import { ChakraProvider, Box } from "@chakra-ui/react";
 import { RecoilRoot } from "recoil";
 import { userState } from "./atoms";
 import { useRecoilValue } from "recoil";
+import FullEventView from "./pages/FullEventView";
 
 const ProtectedRoute = ({ children }) => {
   const user = useRecoilValue(userState)
@@ -43,7 +43,7 @@ ReactDOM.render(
                 <CreateEvent />
               </ProtectedRoute>
             } />
-            <Route path="/fullArticle/:id" element={<FullArticle />} />
+            <Route path="/event/:id" element={<FullEventView />} />
             <Route path="*" element={<NotFoundPage />} />
           </Routes>
           <Footer />

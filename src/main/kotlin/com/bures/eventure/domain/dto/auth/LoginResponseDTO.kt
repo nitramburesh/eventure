@@ -5,5 +5,4 @@ import org.bson.types.ObjectId
 class LoginResponseDTO (
     val id: String,
     val username: String,
-    val token: String
 )

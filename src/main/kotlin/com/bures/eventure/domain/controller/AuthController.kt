@@ -4,17 +4,21 @@ import com.bures.eventure.domain.dto.auth.LoginDTO
 import com.bures.eventure.domain.dto.auth.LoginResponseDTO
 import com.bures.eventure.domain.dto.auth.RegisterDTO
 import com.bures.eventure.domain.model.User
+import com.bures.eventure.security.JwtTokenUtil
 import com.bures.eventure.service.UserService
 import io.jsonwebtoken.Jwts
 import jakarta.servlet.http.Cookie
 import jakarta.servlet.http.HttpServletResponse
+import org.springframework.http.HttpRequest
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
+import org.springframework.web.context.support.HttpRequestHandlerServlet
+import java.util.Date
 
 
 @RestController
 @RequestMapping("/api/v1")
-class AuthController(private val userService: UserService) {
+class AuthController(private val userService: UserService, private val jwtTokenUtil: JwtTokenUtil) {
     @PostMapping("/register")
     fun register(@RequestBody body: RegisterDTO): ResponseEntity<User>{
         val user = User()
@@ -31,12 +35,20 @@ class AuthController(private val userService: UserService) {
         if (!user.comparePassword(body.password)){
             return ResponseEntity.badRequest().body("Invalid password!")
         }
+        val jwt = jwtTokenUtil.generateJwtToken(user)
 
-        val subject = user.id.toString()
-        val key = Jwts.SIG.HS256.key().build()
-        val jwt = Jwts.builder().subject(subject).signWith(key).compact()
+        val cookie = Cookie("jwt", jwt)
+        cookie.isHttpOnly = true;
+        response.addCookie(cookie)
+        return ResponseEntity.ok(LoginResponseDTO(id = user.id.toString(), username = user.username))
+    }
+    @PostMapping("/logout")
+    fun logout(response: HttpServletResponse):ResponseEntity<Any>{
+        val cookie = Cookie("jwt", null)
+        cookie.maxAge = 0
+        response.addCookie(cookie)
 
-        return ResponseEntity.ok(LoginResponseDTO(user.id.toString(), body.username,jwt))
+        return ResponseEntity.ok("Successfully logged out")
     }
 
 }
