@@ -1,6 +1,7 @@
 package com.bures.eventure.domain.controller
 
 import com.bures.eventure.domain.dto.comment.DeleteCommentDTO
+import com.bures.eventure.domain.dto.event.EditEventDTO
 import com.bures.eventure.domain.dto.event.EventDetailResponseDTO
 import com.bures.eventure.domain.dto.event.EventResponseDTO
 import com.bures.eventure.domain.dto.event.EventUpdateDTO
@@ -44,7 +45,15 @@ class EventController(
     fun getEventById(@PathVariable eventId: String, @RequestParam userId: String): ResponseEntity<EventDetailResponseDTO> {
         return ResponseEntity.ok(eventService.findById(ObjectId(eventId),ObjectId(userId), eventRepository, commentRepository, userRepository))
     }
-
+    @PatchMapping("/{eventId}/edit")
+    fun editEvent(@PathVariable eventId: String, @RequestBody editEventPayload: EditEventDTO): ResponseEntity<Any>{
+        val success = eventService.editEvent(ObjectId(eventId), eventRepository, editEventPayload)
+        if (success){
+            return ResponseEntity.ok("Event updated")
+        }else{
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Event not found.")
+        }
+    }
     @PatchMapping("/{eventId}/likes")
     fun updateLikedEvent(
         @PathVariable eventId: String,

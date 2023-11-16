@@ -12,7 +12,7 @@ import java.util.*
 
 data class EventDetailResponseDTO (
     val id: String,
-    var username: String,
+    var creator: Creator,
     var title: String,
     var location: Location,
     var description: String,
@@ -25,4 +25,8 @@ data class EventDetailResponseDTO (
     var eventDate: LocalDateTime,
     var isAttending: Boolean,
     var isLiked : Boolean
+)
+data class Creator(
+    val id: String,
+    val username: String
 )

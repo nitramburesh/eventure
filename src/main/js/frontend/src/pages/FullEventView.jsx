@@ -15,8 +15,10 @@ import {apiUrl, userState} from "../atoms";
 import {useRecoilState, useRecoilValue} from "recoil";
 import {formatDate, formatDateTime, valuesAreEmpty} from "../utils/Utils";
 import {AiFillHeart, AiOutlineHeart, AiFillDelete} from 'react-icons/ai'
-import {BsPersonCheckFill, BsPersonFillAdd} from 'react-icons/bs'
+import {BsPersonCheckFill, BsPersonFillAdd, BsPencilFill} from 'react-icons/bs'
 import Wrapper from "../components/Wrapper";
+import EventDetails from "../components/EventDetails";
+import EventEdit from "../components/EventEdit";
 
 
 function FullEventView(props) {
@@ -29,25 +31,13 @@ function FullEventView(props) {
     const [isLiked, setIsLiked] = useState(false)
     const [isCommentLoading, setIsCommentLoading] = useState(false)
     const [isEventLoading, setIsEventLoading] = useState(false)
+    const [isEditing, setIsEditing] = useState(false)
+    const isAuthor = event.creator?.id === user.id
+
     const setCommentError = (message) => {
         setComment({error: {isError: true, message: message}, value: comment.value})
     }
-    const attendButtonStyles =
-        isAttending ?
-            {
-                bgColor: "green.500",
-                color: "white",
-                borderColor: "green.500",
-                icon: <BsPersonCheckFill/>
-            } : {bgColor: "white", color: "black", borderColor: "black", icon: <BsPersonFillAdd/>}
-    const likedButtonStyles =
-        isLiked ?
-            {bgColor: "red.500", color: "white", borderColor: "red.500", icon: <AiFillHeart/>} : {
-                bgColor: "white",
-                color: "black",
-                borderColor: "black",
-                icon: <AiOutlineHeart/>
-            }
+
     const location = event.location?.city + ", " + event.location?.streetAddress + ", " + event.location?.postalCode
     useEffect(async () => {
         setIsEventLoading(true)
@@ -65,7 +55,7 @@ function FullEventView(props) {
             setIsEventLoading(false)
             console.log(error);
         }
-    }, []);
+    }, [isEditing]);
 
     const handleLikedEvent = () => {
 
@@ -180,64 +170,44 @@ function FullEventView(props) {
                         objectFit="cover"
                     />
                     <VStack width="80%" spacing="30px">
-                        <Heading>{event.title}</Heading>
-                        <Heading as={"h2"} size={"l"}>{location}</Heading>
-                        <Tag backgroundColor="green.200">{formatDateTime(event.eventDate)}</Tag>
-                        <Text textAlign="justify">{event.description}</Text>
-                        <HStack spacing={2} marginTop="30px">
-                            {event?.tags?.map((category) => {
-                                return (
-                                    <Tag size={"md"} variant="solid" colorScheme="orange" key={category}>
-                                        {"#" + category}
-                                    </Tag>
-                                );
-                            })}
-                        </HStack>
-                        <HStack>
-                            <Button onClick={() => handleLikedEvent()} backgroundColor={likedButtonStyles.bgColor}
-                                    color={likedButtonStyles.color} borderColor={likedButtonStyles.borderColor}
-                                    borderWidth="2px" _hover={{backgroundColor: "red.300"}} display="flex" gap="2"
-                                    py='2'
-                                    leftIcon={likedButtonStyles.icon}>{event.likes}</Button>
-                            <Button onClick={() => handleAttendedEvent()} backgroundColor={attendButtonStyles.bgColor}
-                                    color={attendButtonStyles.color} borderColor={attendButtonStyles.borderColor}
-                                    borderWidth="2px" _hover={{backgroundColor: "green.300"}} display="flex" gap="2"
-                                    py='2'
-                                    leftIcon={attendButtonStyles.icon}>{event?.attendees?.length}</Button>
-                        </HStack>
-                        <Box justifySelf="left">
-                            <HStack marginTop="2" spacing="2" display="flex" alignItems="center">
-                                <Image
-                                    borderRadius="full"
-                                    boxSize="40px"
-                                    src="https://100k-faces.glitch.me/random-image"
-                                    alt-="avatar"
-                                />
-                                <Text fontWeight="medium">{event.username}</Text>
-                                <Text>—</Text>
-                                <Text>{formatDate(event.createdDate)}</Text>
-                            </HStack>
-                        </Box>
-                        <Divider/>
-                        <VStack w="80%" gap="5">
-                            <Heading size="md">Comments</Heading>
+                        {isEditing ?
+                            <EventEdit event={event} setIsNotEditing={() => setIsEditing(false)} isEventLoading={isEventLoading} setIsEventLoading={setIsEventLoading}/>
+                            :
+                            <EventDetails event={event} isLiked={isLiked} isAttending={isAttending} isAuthor={isAuthor}
+                                          handleLikedEvent={() => handleLikedEvent()}
+                                          handleAttendedEvent={() => handleAttendedEvent()}
+                                          setIsEditing={()=>setIsEditing(true)}
+                            />
+                        }
 
-                            {event?.comments?.map((comment, index) => commentView(comment, index))}
+                        {!isEditing &&
+                            <>
+                                <Divider/>
+                                <VStack w="80%" gap="5">
+                                    <Heading size="md">Comments</Heading>
 
-                            <VStack w="full" position="relative">
-                                <Textarea value={comment.value} onInput={(event) => {
-                                    setComment({value: event.target.value, error: {isError: false, message: ""}})
-                                }}
-                                          isInvalid={comment.error.isError}
-                                />
+                                    {event?.comments?.map((comment, index) => commentView(comment, index))}
 
-                                {comment.error &&
-                                    <Text position="absolute" bottom="0"
-                                          color="red.500"> {comment.error.message}</Text>}
-                            </VStack>
-                            <Button isLoading={isCommentLoading} onClick={() => handlePostComment()} variant="solid"
-                                    colorScheme="teal">Submit</Button>
-                        </VStack>
+                                    <VStack w="full" position="relative">
+                                        <Textarea value={comment.value} onInput={(event) => {
+                                            setComment({
+                                                value: event.target.value,
+                                                error: {isError: false, message: ""}
+                                            })
+                                        }}
+                                                  isInvalid={comment.error.isError}
+                                        />
+
+                                        {comment.error &&
+                                            <Text position="absolute" bottom="0"
+                                                  color="red.500"> {comment.error.message}</Text>}
+                                    </VStack>
+                                    <Button isLoading={isCommentLoading} onClick={() => handlePostComment()}
+                                            variant="solid"
+                                            colorScheme="teal">Submit</Button>
+                                </VStack>
+                            </>
+                        }
 
                     </VStack>
                 </VStack>
