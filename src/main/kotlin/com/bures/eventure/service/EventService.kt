@@ -1,10 +1,7 @@
 package com.bures.eventure.service
 
 import com.bures.eventure.domain.dto.comment.CommentDTO
-import com.bures.eventure.domain.dto.event.EventAttendResponseDTO
-import com.bures.eventure.domain.dto.event.EventDetailResponseDTO
-import com.bures.eventure.domain.dto.event.EventResponseDTO
-import com.bures.eventure.domain.dto.event.EventUpdateDTO
+import com.bures.eventure.domain.dto.event.*
 import com.bures.eventure.domain.model.Comment
 import com.bures.eventure.domain.model.Event
 import com.bures.eventure.repository.CommentRepository
@@ -31,6 +28,25 @@ class EventService {
         return eventRepository.insert(event);
     }
 
+    fun editEvent(eventId: ObjectId, eventRepository: EventRepository, editEventPayload: EditEventDTO): Boolean {
+        val maybeEvent = eventRepository.findById(eventId)
+        if (maybeEvent.isPresent) {
+            val event = maybeEvent.get()
+
+            event.title = editEventPayload.title
+            event.location = editEventPayload.location
+            event.description = editEventPayload.description
+            event.tags = editEventPayload.tags
+            event.eventDate = editEventPayload.eventDate
+            eventRepository.save(event)
+            return true
+        } else {
+            return false
+        }
+
+
+    }
+
     fun getAllEvents(eventRepository: EventRepository): List<EventResponseDTO> {
         val eventResponse = eventRepository.findAll()
         val response = eventResponse.map { event ->
@@ -41,13 +57,19 @@ class EventService {
 
     fun getEventsByAmount(amount: Int, eventRepository: EventRepository): List<EventResponseDTO> {
         val pageable: Pageable = PageRequest.of(0, amount)
-        return eventRepository.findAllBy(pageable).map { event ->  println(event); mapEventToEventResponseDTO(event)  }
+        return eventRepository.findAllBy(pageable).map { event -> println(event); mapEventToEventResponseDTO(event) }
     }
 
-    fun findById(eventId: ObjectId,userId: ObjectId, eventRepository: EventRepository, commentRepository: CommentRepository, userRepository: UserRepository): EventDetailResponseDTO {
+    fun findById(
+        eventId: ObjectId,
+        userId: ObjectId,
+        eventRepository: EventRepository,
+        commentRepository: CommentRepository,
+        userRepository: UserRepository
+    ): EventDetailResponseDTO {
         val maybeEvent = eventRepository.findById(eventId)
         val event = maybeEvent.get()
-        val maybeCreator = userRepository.findById(ObjectId(event.creatorId))
+        val creator = userRepository.findById(ObjectId(event.creatorId)).get()
         val viewingUser = userRepository.findById(userId).get()
         val foundComments = commentRepository.findAllByIdIn(event.comments!!)
         val comments = foundComments.map {
@@ -64,7 +86,7 @@ class EventService {
         val isLiked = viewingUser.likedEvents.contains(eventId.toString())
         return EventDetailResponseDTO(
             id = event.id.toString(),
-            username = maybeCreator.get().username,
+            creator = Creator(username = creator.username, id = creator.id.toString()),
             title = event.title,
             attendees = event.attendees,
             comments = comments,
@@ -148,13 +170,19 @@ class EventService {
             userRepository.save(user)
             eventRepository.save(event)
             val isAttending = event.attendees.contains(user.id.toString())
-            return Optional.of(EventAttendResponseDTO(isAttending=isAttending, attendedEvents = user.attendedEvents))
+            return Optional.of(EventAttendResponseDTO(isAttending = isAttending, attendedEvents = user.attendedEvents))
         }
 
         return Optional.empty()
     }
 
-    fun addEventComment(eventId: ObjectId, eventRepository: EventRepository, commentRepository:CommentRepository, userRepository: UserRepository,updateRequest: EventUpdateDTO): Optional<CommentDTO> {
+    fun addEventComment(
+        eventId: ObjectId,
+        eventRepository: EventRepository,
+        commentRepository: CommentRepository,
+        userRepository: UserRepository,
+        updateRequest: EventUpdateDTO
+    ): Optional<CommentDTO> {
         val maybeEvent = eventRepository.findById(eventId)
         val maybeUser = userRepository.findById(ObjectId(updateRequest.comment?.userId))
         if (maybeEvent.isPresent && maybeUser.isPresent) {
@@ -171,7 +199,12 @@ class EventService {
         return Optional.empty()
     }
 
-    fun deleteEventComment(eventId: ObjectId, eventRepository: EventRepository, commentRepository:CommentRepository, commentId: ObjectId): Boolean{
+    fun deleteEventComment(
+        eventId: ObjectId,
+        eventRepository: EventRepository,
+        commentRepository: CommentRepository,
+        commentId: ObjectId
+    ): Boolean {
         val maybeEvent = eventRepository.findById(eventId)
         if (maybeEvent.isPresent) {
             val event = maybeEvent.get()
@@ -184,15 +217,16 @@ class EventService {
     }
 }
 
-fun mapToCommentDTO(comment: Comment, username: String) : CommentDTO{
+fun mapToCommentDTO(comment: Comment, username: String): CommentDTO {
     return CommentDTO(
         id = comment.id.toString(),
-         userId= comment.userId,
-         username= username,
-         message= comment.message,
-         date= comment.date
+        userId = comment.userId,
+        username = username,
+        message = comment.message,
+        date = comment.date
     )
 }
+
 fun mapEventToEventResponseDTO(event: Event): EventResponseDTO {
     return EventResponseDTO(
         id = event.id?.toString() ?: "",  // Convert ObjectId to String
@@ -205,5 +239,7 @@ fun mapEventToEventResponseDTO(event: Event): EventResponseDTO {
         createdDate = event.createdDate,
         eventDate = event.eventDate
     )
+
+
 }
 
