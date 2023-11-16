@@ -46,3 +46,9 @@ export const handleUploadClick = (inputFile) => {
 export const valuesAreEmpty = (values) =>{
    return values.includes("")
 }
+export const formatDateTime = (date) => {
+    return new Date(date).toLocaleDateString() + " " + "at" + " " + new Date(date).toLocaleTimeString()
+}
+export const formatDate = (date) => {
+    return (new Date(date).toLocaleDateString())
+}

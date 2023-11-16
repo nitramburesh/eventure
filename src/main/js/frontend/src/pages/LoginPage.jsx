@@ -44,7 +44,6 @@ function LoginPage(props) {
       await axios.post(baseApiUrl + "login", loginData, {withCredentials: true}).then(({ data }) => {
         const loggedInUser = { id: data.id, username: data.username };
         setUser(loggedInUser);
-        console.log(user);
         localStorage.setItem("token", document.cookie);
         localStorage.setItem("user", JSON.stringify(loggedInUser));
         redirectToHomePage();

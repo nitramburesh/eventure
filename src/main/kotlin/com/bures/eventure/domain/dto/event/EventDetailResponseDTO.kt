@@ -1,5 +1,6 @@
 package com.bures.eventure.domain.dto.event
 
+import com.bures.eventure.domain.dto.comment.CommentDTO
 import com.bures.eventure.domain.dto.user.UserDTO
 import com.bures.eventure.domain.model.Comment
 import com.bures.eventure.domain.model.Location
@@ -17,9 +18,11 @@ data class EventDetailResponseDTO (
     var description: String,
     var attendees: List<String>,
     var likes: Int,
-    var comments: List<Comment>,
+    var comments: List<CommentDTO>,
     var tags: List<String>,
     var price: Int,
     var createdDate: Date,
     var eventDate: LocalDateTime,
+    var isAttending: Boolean,
+    var isLiked : Boolean
 )
