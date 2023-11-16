@@ -10,6 +10,7 @@ import {
   HStack,
   Tag,
 } from "@chakra-ui/react";
+import {formatDateTime} from "../utils/Utils";
 
 function Event({ props }) {
   const BlogTags = ({ marginTop, tags }) => {
@@ -75,21 +76,23 @@ function Event({ props }) {
               </Link>
             </Box>
             <BlogTags tags={props.tags} marginTop="3" />
-            <Heading fontSize="xl" marginTop="2">
+            <Heading fontSize="xl" marginTop="2" gap="5" display="flex">
               <Link
                 textDecoration="none"
                 _hover={{ textDecoration: "none" }}
-                href="/Users/bures/Documents/Personal/Eventure/src/main/js/frontend/src/pages/FullEventView"
+                href={`/event/${props.id}`}
               >
                 {props.title}
               </Link>
+              <Tag backgroundColor="green.200" >{formatDateTime(props.eventDate)}</Tag>
             </Heading>
+
             <Text as="p" fontSize="md" marginTop="2">
               {sliceArticleDescription(props.description)}
             </Text>
             <BlogAuthor
               name={props.username}
-              date={new Date(props.date)}
+              date={new Date(props.createdDate)}
             />
           </Box>
         </WrapItem>

@@ -21,6 +21,9 @@ class User {
         set(value){
             field = BCryptPasswordEncoder().encode(value)
         }
+
+    var likedEvents: List<String> = emptyList()
+    var attendedEvents: List<String> = emptyList()
     fun comparePassword(password: String): Boolean {
         return BCryptPasswordEncoder().matches(password, this.password)
     }

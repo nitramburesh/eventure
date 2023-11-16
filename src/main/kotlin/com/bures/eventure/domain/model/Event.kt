@@ -16,13 +16,11 @@ var creatorId: String,
 var title: String,
 var location: Location,
 var description: String,
-@DBRef
-var attendees: List<ObjectId>? = emptyList(),
+var attendees: List<String> = emptyList(),
 
 var likes: Int? = 0,
 
-@DBRef
-var comments: List<Comment>? = emptyList(),
+var comments: List<ObjectId>? = emptyList(),
 
 var tags: List<String>,
 

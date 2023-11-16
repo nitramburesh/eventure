@@ -109,12 +109,11 @@ function CreateEvent(props) {
       },
       description: event.description.value,
       tags: addedTags,
-      createdDate: new Date(),
-      eventDate: date,
+      createdDate: new Date().toISOString(),
+      eventDate: event.eventDate.value,
       image: formData,
-
     };
-
+    console.log(data)
     if (areInputsValid()) {
       await axios
         .post(baseApiUrl + "events", data)
@@ -294,7 +293,7 @@ function CreateEvent(props) {
                           data-enable-time
                           onChange={([date]) => {
                             updateEvent({
-                              defaultInputValue: {
+                              eventDate: {
                                 value: date.toISOString(),
                                 error: false,
                               }});
@@ -304,12 +303,9 @@ function CreateEvent(props) {
                             altInput: true,
                             altFormat: "F j, Y at H:i",
                             dateFormat: "Z",
-
                           }}
                           placeholder="No date selected..."
                           ref={datepickerRef}
-
-
                       >
                       </Flatpickr>
                       <Button  onClick={() => datepickerRef.current.flatpickr.open()}>+</Button>

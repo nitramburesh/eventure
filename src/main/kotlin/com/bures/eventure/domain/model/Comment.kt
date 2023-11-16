@@ -1,14 +1,17 @@
 package com.bures.eventure.domain.model
 
+
 import org.bson.types.ObjectId
-import org.springframework.data.mongodb.core.mapping.DBRef
 import org.springframework.data.mongodb.core.mapping.Document
-import java.time.LocalDateTime
+import org.springframework.data.mongodb.core.mapping.MongoId
+import java.util.Date
 
 @Document(collection = "comment")
 data class Comment(
-@DBRef
-var userId: ObjectId,
-var message: String,
-var date: LocalDateTime
+    @MongoId
+    var id: ObjectId? = ObjectId(),
+    var eventId: String?,
+    var userId: String,
+    var message: String,
+    var date: Date
 )

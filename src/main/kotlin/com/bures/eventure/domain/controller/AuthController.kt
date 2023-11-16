@@ -24,6 +24,7 @@ class AuthController(private val userService: UserService, private val jwtTokenU
         val user = User()
         user.username = body.username
         user.password = body.password
+        user.likedEvents = emptyList()
 
         return ResponseEntity.ok(userService.save(user));
     }
@@ -40,7 +41,7 @@ class AuthController(private val userService: UserService, private val jwtTokenU
         val cookie = Cookie("jwt", jwt)
         cookie.isHttpOnly = true;
         response.addCookie(cookie)
-        return ResponseEntity.ok(LoginResponseDTO(id = user.id.toString(), username = user.username))
+        return ResponseEntity.ok(LoginResponseDTO(id = user.id.toString(), username = user.username, likedEvents = user.likedEvents))
     }
     @PostMapping("/logout")
     fun logout(response: HttpServletResponse):ResponseEntity<Any>{
