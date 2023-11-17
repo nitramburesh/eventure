@@ -1,29 +1,26 @@
-import React, { useEffect, useState } from "react";
+import React, { useRef, useState } from "react";
 
 import {
   Box,
+  Drawer,
+  DrawerBody,
+  DrawerContent,
+  DrawerHeader,
+  DrawerOverlay,
   Heading,
   IconButton,
-  Button,
   Image,
-  useMediaQuery,
-  Drawer,
-  DrawerContent,
-  DrawerOverlay,
   Text,
-  DrawerHeader,
-  DrawerBody,
+  useDisclosure,
+  useMediaQuery,
   VStack,
 } from "@chakra-ui/react";
 import { Link } from "react-router-dom";
-import { useDisclosure } from "@chakra-ui/react";
-import { useRef } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faXmark, faBars } from "@fortawesome/free-solid-svg-icons";
-import {useRecoilState, useRecoilValue} from "recoil";
-import {apiUrl, userState} from "../atoms";
+import { faBars, faXmark } from "@fortawesome/free-solid-svg-icons";
+import { useRecoilState, useRecoilValue } from "recoil";
+import { apiUrl, userState } from "../atoms";
 import axios from "axios";
-
 
 function Navbar() {
   const baseApiUrl = useRecoilValue(apiUrl);
@@ -34,34 +31,40 @@ function Navbar() {
   const btnRef = useRef();
 
   const handleLogout = async () => {
-    await axios.post(baseApiUrl + "logout",{}, {withCredentials: true })
+    await axios.post(baseApiUrl + "logout");
     await localStorage.clear();
     onClose();
     setUser(null);
-
   };
-  const loggedInLinks = (
-    <>
-      <Link to="/createEvent" onClick={onClose}>
-        NEW EVENT
+  const LoggedInLinks = () => {
+    return (
+      <>
+        <Link to="/createEvent" onClick={onClose}>
+          NEW EVENT
+        </Link>
+        <Link to="/" onClick={handleLogout}>
+          LOG OUT
+        </Link>
+      </>
+    );
+  };
+  const ProfilePicture = () => {
+    return (
+      <Link to="/userDetails">
+        <Image
+          rounded="full"
+          width="30px"
+          height="30px"
+          src="https://images.unsplash.com/photo-1517849845537-4d257902454a?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=3024&q=80"
+        />
       </Link>
-      <Link to="/" onClick={handleLogout}>
-        LOG OUT
-      </Link>
-    </>
-  );
-  const profilePicture = (
-    <Image
-      rounded="full"
-      width="30px"
-      height="30px"
-      src="https://images.unsplash.com/photo-1517849845537-4d257902454a?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=3024&q=80"
-    ></Image>
-  );
+    );
+  };
   const mobileLinks = (
     <>
       <Box display="flex" flex="1" justifyContent="right" mr="20px">
         <IconButton
+          aria-label="Open menu"
           variant="solid"
           colorScheme="teal"
           onClick={onOpen}
@@ -90,10 +93,15 @@ function Navbar() {
           <DrawerBody>
             <VStack spacing="6">
               <Link to="/" onClick={onClose}>
+                {" "}
                 HOME
               </Link>
+              <Link to="/allEvents" onClick={onClose}>
+                {" "}
+                ALL EVENTS
+              </Link>
               {user ? (
-                loggedInLinks
+                <LoggedInLinks />
               ) : (
                 <>
                   <Link to="/signup" onClick={onClose}>
@@ -105,6 +113,7 @@ function Navbar() {
                 </>
               )}
               <IconButton
+                aria-label="close menu"
                 onClick={onClose}
                 variant="ghost"
                 icon={<FontAwesomeIcon icon={faXmark} />}
@@ -121,11 +130,11 @@ function Navbar() {
   const desktopLinks = (
     <Box display="flex" justifyContent="space-around" flex="1">
       <Link to="/">HOME</Link>
-
+      <Link to="/allEvents">ALL EVENTS</Link>
       {user ? (
         <>
-          {loggedInLinks}
-          {profilePicture}
+          <LoggedInLinks />
+          <ProfilePicture />
         </>
       ) : (
         <>

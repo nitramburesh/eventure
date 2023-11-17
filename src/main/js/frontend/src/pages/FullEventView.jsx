@@ -5,7 +5,6 @@ import {
     HStack,
     Image,
     VStack,
-    Tag,
     Center,
     Box, IconButton, Button, Textarea, Wrap, Container, Divider, FormControl, FormErrorMessage,
 } from "@chakra-ui/react";
@@ -42,9 +41,9 @@ function FullEventView(props) {
     useEffect(async () => {
         setIsEventLoading(true)
         try {
-            const userResponse = await axios
-                .get(baseApiUrl + `users/6543d1a9dd11214cd4a36486`)
-            setUser({...user, likedEvents: userResponse.data})
+            const userEventsResponse = await axios
+                .get(baseApiUrl + `users/events/${user.id}`)
+            setUser({...user, likedEvents: userEventsResponse.data})
             const eventResponse = await axios
                 .get(baseApiUrl + `events/${id}`, {params: {userId: user.id}})
             setEvent(eventResponse.data);
@@ -83,7 +82,6 @@ function FullEventView(props) {
         }).then(({data}) => {
             setIsAttending(data.isAttending)
             setUser({...user, attendedEvents: data.attendedEvents})
-            // setEvent({...event, attendees: response.data})
         })
     }
     const handlePostComment = () => {
@@ -169,7 +167,7 @@ function FullEventView(props) {
                         h={{base: "150px", md: " 300px"}}
                         objectFit="cover"
                     />
-                    <VStack width="80%" spacing="30px">
+                    <VStack width="full" spacing="30px">
                         {isEditing ?
                             <EventEdit event={event} setIsNotEditing={() => setIsEditing(false)} isEventLoading={isEventLoading} setIsEventLoading={setIsEventLoading}/>
                             :
@@ -186,7 +184,7 @@ function FullEventView(props) {
                                 <VStack w="80%" gap="5">
                                     <Heading size="md">Comments</Heading>
 
-                                    {event?.comments?.map((comment, index) => commentView(comment, index))}
+                                    {event.comments?.length === 0 ? <Text color="gray.500">It looks empty out here, let the author know how you feel and leave a comment!</Text> : event?.comments?.map((comment, index) => commentView(comment, index))}
 
                                     <VStack w="full" position="relative">
                                         <Textarea value={comment.value} onInput={(event) => {

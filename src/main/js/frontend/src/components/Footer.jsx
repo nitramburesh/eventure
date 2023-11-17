@@ -15,7 +15,7 @@ import {
   faTwitter,
   faYoutube,
 } from "@fortawesome/free-brands-svg-icons";
-function Navbar(props) {
+function Footer(props) {
   const SocialButton = ({ children, label, href }) => {
     return (
       <chakra.button
@@ -43,7 +43,6 @@ function Navbar(props) {
     <Box
       bg={useColorModeValue("gray.50", "gray.900")}
       color={useColorModeValue("gray.700", "gray.200")}
-      mt="50px"
       position="absolute"
       left="0"
       bottom="0"
@@ -78,7 +77,7 @@ function Navbar(props) {
           justify={{ base: "center", md: "space-between" }}
           align={{ base: "center", md: "center" }}
         >
-          <Text>© 2022 - tento projekt je vytvoren v ramci predmetu TNPW2</Text>
+          <Text>© 2023 - tento projekt je vytvořen v rámci předmětu PPRO.</Text>
           <Stack direction={"row"} spacing={6}>
             <SocialButton label={"Twitter"} href={"https://twitter.com/"}>
               <FontAwesomeIcon icon={faTwitter} />
@@ -99,4 +98,4 @@ function Navbar(props) {
   );
 }
 
-export default Navbar;
+export default Footer;

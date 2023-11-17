@@ -1,37 +1,39 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useRef, useState } from "react";
 
 import "flatpickr/dist/themes/material_green.css";
 import {
-  Center,
   Box,
-  Textarea,
-  FormControl,
-  FormLabel,
-  Input,
-  FormHelperText,
   Button,
-  InputLeftElement,
-  VStack,
+  Center,
+  FormControl,
+  FormHelperText,
+  FormLabel,
   HStack,
   Image,
+  Input,
   InputGroup,
+  InputLeftElement,
+  Textarea,
+  VStack,
 } from "@chakra-ui/react";
 import { faImage } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { useRecoilState, useRecoilValue } from "recoil";
-import { userState, apiUrl } from "../../atoms";
+import { apiUrl, userState } from "../../atoms";
 import {
   errorHeading,
-  successHeading,
-  normalHeading,
   handleUploadClick,
+  normalHeading,
+  successHeading,
 } from "../../utils/Utils";
 import Flatpickr from "react-flatpickr";
-import '../../flatpickr.css'
+import "../../flatpickr.css";
+import ClickableTag from "../../components/ClickableTag";
+
 function CreateEvent(props) {
-  const datepickerRef = useRef()
+  const datepickerRef = useRef();
   const defaultInputValue = { value: "" };
   const baseApiUrl = useRecoilValue(apiUrl);
   const [user, setUser] = useRecoilState(userState);
@@ -43,9 +45,9 @@ function CreateEvent(props) {
     postalCode: defaultInputValue,
     streetAddress: defaultInputValue,
     description: defaultInputValue,
-    eventDate: defaultInputValue
+    eventDate: defaultInputValue,
   });
-  const [date, setDate] = useState()
+  const [date, setDate] = useState();
   const [tag, setTag] = useState("");
   const [addedTags, setAddedTags] = useState([]);
   const [preview, setPreview] = useState();
@@ -97,7 +99,7 @@ function CreateEvent(props) {
   };
   const handleSubmit = async () => {
     const formData = new FormData();
-    formData.append('image', titleImage);
+    formData.append("image", titleImage);
     const data = {
       creatorId: user.id,
       title: event.title.value,
@@ -113,7 +115,7 @@ function CreateEvent(props) {
       eventDate: event.eventDate.value,
       image: formData,
     };
-    console.log(data)
+    console.log(data);
     if (areInputsValid()) {
       await axios
         .post(baseApiUrl + "events", data)
@@ -123,7 +125,6 @@ function CreateEvent(props) {
         })
         .catch(() => setError(true));
     }
-
   };
 
   const showHeading = () => {
@@ -289,50 +290,45 @@ function CreateEvent(props) {
                     <FormLabel htmlFor="date">Date</FormLabel>
                     <HStack w="full">
                       <Flatpickr
-                          value={date}
-                          data-enable-time
-                          onChange={([date]) => {
-                            updateEvent({
-                              eventDate: {
-                                value: date.toISOString(),
-                                error: false,
-                              }});
-                          }}
-
-                          options={{
-                            altInput: true,
-                            altFormat: "F j, Y at H:i",
-                            dateFormat: "Z",
-                          }}
-                          placeholder="No date selected..."
-                          ref={datepickerRef}
+                        value={date}
+                        data-enable-time
+                        onChange={([date]) => {
+                          updateEvent({
+                            eventDate: {
+                              value: date.toISOString(),
+                              error: false,
+                            },
+                          });
+                        }}
+                        options={{
+                          altInput: true,
+                          altFormat: "F j, Y at H:i",
+                          dateFormat: "Z",
+                        }}
+                        placeholder="No date selected..."
+                        ref={datepickerRef}
+                      ></Flatpickr>
+                      <Button
+                        onClick={() => datepickerRef.current.flatpickr.open()}
                       >
-                      </Flatpickr>
-                      <Button  onClick={() => datepickerRef.current.flatpickr.open()}>+</Button>
+                        +
+                      </Button>
                     </HStack>
-
                   </VStack>
                 </HStack>
-                <HStack >
+                <HStack>
                   {addedTags.map((tag) => (
-                    <Button
-                      p={2}
-                      borderRadius="lg"
-                      bg="green.400"
-                      color="white"
-                      _hover={{
-                        bg: "red.400",
-                        textDecoration: "line-through",
-                      }}
-                      key={tag}
+                    <ClickableTag
                       onClick={() => {
                         setAddedTags(
-                          addedTags.filter((tagToDelete) => tag !== tagToDelete)
+                          addedTags.filter(
+                            (tagToDelete) => tag !== tagToDelete,
+                          ),
                         );
                       }}
-                    >
-                      {`#${tag.toLowerCase()}`}
-                    </Button>
+                      tag={tag}
+                      key={tag}
+                    />
                   ))}
                 </HStack>
               </VStack>

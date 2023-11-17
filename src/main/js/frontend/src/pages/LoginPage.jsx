@@ -68,11 +68,11 @@ function LoginPage(props) {
       <VStack width="100%" maxWidth="500px" justifySelf="center" spacing="30px">
         {showHeading()}
         <FormControl isRequired>
-          <FormLabel htmlFor="email">Email address</FormLabel>
+          <FormLabel htmlFor="username">Username</FormLabel>
           <Input
-            id="email"
-            type="email"
-            placeholder="Enter your email..."
+            id="username"
+            type="username"
+            placeholder="Enter your username..."
             onChange={(event) => {
               setUsername(event.target.value);
               setError(false);
