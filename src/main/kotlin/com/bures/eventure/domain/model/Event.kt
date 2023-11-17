@@ -1,5 +1,6 @@
 package com.bures.eventure.domain.model
 
+import com.google.type.DateTime
 import org.bson.types.ObjectId
 import org.springframework.data.mongodb.core.mapping.DBRef
 import org.springframework.data.mongodb.core.mapping.Document
@@ -26,7 +27,7 @@ var tags: List<String>,
 
 var price: Int,
 
-var eventDate: LocalDateTime,
+var eventDate: Date,
 var createdDate: Date
 
 

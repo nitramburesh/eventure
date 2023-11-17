@@ -25,9 +25,9 @@ function EventDetails(props) {
         <>
             <Heading>{props.event.title}</Heading>
             <Heading as={"h2"} size={"l"}>{props.location}</Heading>
-            <Tag backgroundColor="green.200">{formatDateTime(props.event.eventDate)}</Tag>
-            <Text textAlign="justify">{props.event.description}</Text>
-            <HStack spacing={2} marginTop="30px">
+            <Text fontSize="20px" color="gray.700">{formatDateTime(props.event.eventDate)}</Text>
+            <Text textAlign="justify" w="80%">{props.event.description}</Text>
+            <HStack spacing={2} marginTop="30px" w="80%" justifyContent="center">
                 {props.event?.tags?.map((category) => {
                     return (
                         <Tag size={"md"} variant="solid" colorScheme="orange" key={category}>

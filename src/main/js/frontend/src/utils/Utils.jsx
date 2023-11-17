@@ -43,12 +43,21 @@ export const handleUploadClick = (inputFile) => {
   inputFile.current.click();
 };
 
-export const valuesAreEmpty = (values) =>{
-   return values.includes("")
-}
+export const valuesAreEmpty = (values) => {
+  return values.includes("");
+};
 export const formatDateTime = (date) => {
-    return new Date(date).toLocaleDateString() + " " + "at" + " " + new Date(date).toLocaleTimeString()
-}
+  const dateObject = new Date(date);
+  const year = dateObject.getFullYear();
+  const month = dateObject.toLocaleString("default", { month: "numeric" });
+  const day = dateObject.getDay();
+  const hours = dateObject.getHours().toString().padStart(2, "0");
+  const minutes = dateObject.getMinutes().toString().padStart(2, "0");
+  return `${day}.${month}.${year} at ${hours}:${minutes}`;
+};
 export const formatDate = (date) => {
-    return (new Date(date).toLocaleDateString())
-}
+  return new Date(date).toLocaleDateString();
+};
+export const getSelectedTags = (params) => {
+  return new Set(params.size === 0 ? [] : params.get("tags")?.split("_"));
+};

@@ -1,32 +1,31 @@
 import React, { useEffect, useState } from "react";
 import Hero from "../components/Hero";
 import Event from "../components/Event";
-import { Flex, Center, Box, Heading, Divider, Button } from "@chakra-ui/react";
+import { Box, Button, Center, Divider, Grid, Heading } from "@chakra-ui/react";
 import axios from "axios";
+import { useNavigate } from "react-router-dom";
 
 export default function Homepage() {
   const [events, setEvents] = useState([]);
   const [hideButton, setHideButton] = useState(false);
-  const showAllArticlesButton = () => {
-    if (hideButton === false || events.length > 12) {
+  const navigate = useNavigate();
+  const ShowAllArticlesButton = () => {
+    if (hideButton === false && events.length > 3) {
       return (
-        <Button onClick={fetchAllEvents} mt="50px" variant="ghost">
-          Show all articles
+        <Button
+          onClick={() => navigate("/allEvents")}
+          mt="50px"
+          variant="outline"
+          colorScheme="teal"
+        >
+          See all articles
         </Button>
       );
+    } else {
+      return <></>;
     }
   };
 
-  const fetchAllEvents = async () => {
-    try {
-      await axios.get("http://localhost:8080/api/v1/events/all").then((res) => {
-        setEvents(res.data);
-        setHideButton(true);
-      });
-    } catch (error) {
-      console.log(error);
-    }
-  };
   useEffect(() => {
     try {
       axios.get("http://localhost:8080/api/v1/events?amount=4").then((res) => {
@@ -46,17 +45,14 @@ export default function Homepage() {
         </Heading>
       </Center>
       <Divider />
-      <Flex
-        wrap="wrap"
-        gap={{ base: 0, md: "10px" }}
-        justifyContent="space-around"
-        p="5px"
-      >
+      <Grid templateColumns={{ base: "1fr", lg: "1fr 1fr" }} gap="5" p="5">
         {events.map((event) => (
           <Event props={event} key={event.id} />
         ))}
-      </Flex>
-      <Center>{showAllArticlesButton()}</Center>
+      </Grid>
+      <Center>
+        <ShowAllArticlesButton />
+      </Center>
     </Box>
   );
 }

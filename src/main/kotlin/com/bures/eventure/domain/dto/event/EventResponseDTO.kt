@@ -2,6 +2,7 @@ package com.bures.eventure.domain.dto.event
 
 import com.bures.eventure.domain.model.Comment
 import com.bures.eventure.domain.model.Location
+import com.google.type.DateTime
 import org.bson.types.ObjectId
 import java.time.LocalDateTime
 import java.time.LocalTime
@@ -16,5 +17,5 @@ data class EventResponseDTO (
     var tags: List<String>,
     var price: Int,
     var createdDate: Date,
-    var eventDate: LocalDateTime,
+    var eventDate: Date,
 )

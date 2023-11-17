@@ -22,7 +22,7 @@ data class EventDetailResponseDTO (
     var tags: List<String>,
     var price: Int,
     var createdDate: Date,
-    var eventDate: LocalDateTime,
+    var eventDate: Date,
     var isAttending: Boolean,
     var isLiked : Boolean
 )
