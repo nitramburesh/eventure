@@ -12,7 +12,7 @@ import {
 import axios from "axios";
 import { apiUrl } from "../atoms";
 import { useRecoilValue } from "recoil";
-import {valuesAreEmpty} from "../utils/Utils";
+import { handleEnterPress, valuesAreEmpty } from "../utils/Utils";
 import { useNavigate } from "react-router-dom";
 import {
   errorHeading,
@@ -20,40 +20,39 @@ import {
   normalHeading,
   handleUploadClick,
 } from "../utils/Utils";
+import useRedirectToHomepage from "../utils/useRedirectToHomepage";
 
 function SignupPage(props) {
   const baseApiUrl = useRecoilValue(apiUrl);
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
-  const navigate = useNavigate();
-
-  const redirectToHomepage = () => {
-    return setTimeout(() => {
-      navigate("/login");
-    }, 2000);
-  };
+  const [isLoading, setIsLoading] = useState(false);
+  const { redirectWithDelay } = useRedirectToHomepage();
 
   const handleSignup = async () => {
+    setIsLoading(true);
     const newUser = {
       username: username,
       password: password,
     };
-    if(valuesAreEmpty([username, password])) {
-      setError("Values cannot be empty")
-    }else{try {
-      await axios
-          .post(baseApiUrl + "register", newUser)
-          .then(() => redirectToHomepage());
-    } catch (error) {
-      setError("User with this name already exists.");
-    }}
+    if (valuesAreEmpty([username, password])) {
+      setIsLoading(false);
+      setError("Values cannot be empty");
+    } else {
+      try {
+        await axios.post(baseApiUrl + "register", newUser).then(() => {
+          redirectWithDelay("/login");
+        });
+      } catch (error) {
+        setIsLoading(false);
+        setError("User with this name already exists.");
+      }
+    }
   };
-  const heading = error ? (
-    errorHeading("Error!", error)
-  ) : (
-    normalHeading("Sign up", "Enter your credentials.")
-  );
+  const heading = error
+    ? errorHeading("Error!", error)
+    : normalHeading("Sign up", "Enter your credentials.");
 
   return (
     <Center mt="100px">
@@ -70,17 +69,26 @@ function SignupPage(props) {
               setError("");
             }}
           />
+        </FormControl>
+        <FormControl isRequired>
           <FormLabel htmlFor="password">Password</FormLabel>
           <Input
             id="password"
             type="password"
             placeholder="Enter your password..."
             onChange={(event) => {
-              setPassword(event.target.value); setError("")
+              setPassword(event.target.value);
+              setError("");
             }}
+            onKeyDown={(event) => handleEnterPress(event, handleSignup)}
           />
         </FormControl>
-        <Button colorScheme="teal" rounded="lg" onClick={handleSignup}>
+        <Button
+          colorScheme="teal"
+          rounded="lg"
+          onClick={handleSignup}
+          isLoading={isLoading}
+        >
           Sign up
         </Button>
       </VStack>

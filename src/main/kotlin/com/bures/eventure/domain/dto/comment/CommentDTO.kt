@@ -7,5 +7,6 @@ data class CommentDTO (
     val userId: String,
     val username: String,
     val message: String,
-    val date: Date
+    val date: Date,
+    val profilePicture : String
 )

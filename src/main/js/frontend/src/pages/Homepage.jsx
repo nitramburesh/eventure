@@ -7,33 +7,24 @@ import { useNavigate } from "react-router-dom";
 
 export default function Homepage() {
   const [events, setEvents] = useState([]);
-  const [hideButton, setHideButton] = useState(false);
   const navigate = useNavigate();
   const ShowAllArticlesButton = () => {
-    if (hideButton === false && events.length > 3) {
-      return (
-        <Button
-          onClick={() => navigate("/allEvents")}
-          mt="50px"
-          variant="outline"
-          colorScheme="teal"
-        >
-          See all articles
-        </Button>
-      );
-    } else {
-      return <></>;
-    }
+    return (
+      <Button
+        onClick={() => navigate("/allEvents")}
+        mt="50px"
+        variant="outline"
+        colorScheme="teal"
+      >
+        See all articles
+      </Button>
+    );
   };
 
   useEffect(() => {
-    try {
-      axios.get("http://localhost:8080/api/v1/events?amount=4").then((res) => {
-        setEvents(res.data);
-      });
-    } catch (error) {
-      console.log(error);
-    }
+    axios.get("http://localhost:8080/api/v1/events?amount=4").then((res) => {
+      setEvents(res.data);
+    });
   }, []);
 
   return (
@@ -45,7 +36,11 @@ export default function Homepage() {
         </Heading>
       </Center>
       <Divider />
-      <Grid templateColumns={{ base: "1fr", lg: "1fr 1fr" }} gap="5" p="5">
+      <Grid
+        templateColumns={{ base: "1fr", md: "1fr 1fr", lg: "1fr 1fr 1fr" }}
+        gap="5"
+        p="5"
+      >
         {events.map((event) => (
           <Event props={event} key={event.id} />
         ))}

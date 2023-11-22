@@ -1,13 +1,10 @@
 package com.bures.eventure.domain.model
 
-import com.google.type.DateTime
+
 import org.bson.types.ObjectId
-import org.springframework.data.mongodb.core.mapping.DBRef
 import org.springframework.data.mongodb.core.mapping.Document
 import org.springframework.data.mongodb.core.mapping.MongoId
-import org.springframework.web.multipart.MultipartFile
-import java.time.LocalDateTime
-import java.util.Date
+import java.util.*
 
 @Document(collection = "event")
 data class Event(
@@ -17,7 +14,7 @@ var creatorId: String,
 var title: String,
 var location: Location,
 var description: String,
-var attendees: List<String> = emptyList(),
+var attendees: List<ObjectId> = emptyList(),
 
 var likes: Int? = 0,
 
@@ -28,7 +25,7 @@ var tags: List<String>,
 var price: Int,
 
 var eventDate: Date,
-var createdDate: Date
-
+var createdDate: Date,
+var image: String,
 
 )

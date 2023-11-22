@@ -8,7 +8,7 @@ import SignupPage from "./pages/SignupPage";
 import LoginPage from "./pages/LoginPage";
 import AllEventsPage from "./pages/AllEventsPage";
 import NotFoundPage from "./pages/NotFoundPage";
-import CreateEvent from "./pages/CreateEventPage/CreateEvent";
+import CreateEvent from "./pages/CreateEvent";
 
 import Navbar from "../src/components/Navbar";
 import Footer from "../src/components/Footer";
@@ -21,7 +21,7 @@ import UserPage from "./pages/UserPage";
 const ProtectedRoute = ({ children }) => {
   const user = useRecoilValue(userState);
   if (!user) {
-    return <Navigate to="/" replace />;
+    return <Navigate to="/login" replace />;
   }
 
   return children;
@@ -47,7 +47,14 @@ ReactDOM.render(
                 </ProtectedRoute>
               }
             />
-            <Route path="/event/:id" element={<FullEventView />} />
+            <Route
+              path="/event/:id"
+              element={
+                <ProtectedRoute>
+                  <FullEventView />
+                </ProtectedRoute>
+              }
+            />
             <Route path="*" element={<NotFoundPage />} />
           </Routes>
           <Footer />

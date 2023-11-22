@@ -21,28 +21,27 @@ import { faBars, faXmark } from "@fortawesome/free-solid-svg-icons";
 import { useRecoilState, useRecoilValue } from "recoil";
 import { apiUrl, userState } from "../atoms";
 import axios from "axios";
+import { handleLogout } from "../utils/Utils";
 
 function Navbar() {
   const baseApiUrl = useRecoilValue(apiUrl);
   const [isMobile] = useMediaQuery("(max-width: 768px)");
-  const [loggedIn, setLoggedIn] = useState(false);
   const [user, setUser] = useRecoilState(userState);
   const { isOpen, onOpen, onClose } = useDisclosure();
   const btnRef = useRef();
 
-  const handleLogout = async () => {
-    await axios.post(baseApiUrl + "logout");
-    await localStorage.clear();
-    onClose();
-    setUser(null);
-  };
   const LoggedInLinks = () => {
     return (
       <>
         <Link to="/createEvent" onClick={onClose}>
           NEW EVENT
         </Link>
-        <Link to="/" onClick={handleLogout}>
+        <Link
+          to="/"
+          onClick={() => {
+            handleLogout(baseApiUrl, setUser).then(() => onClose());
+          }}
+        >
           LOG OUT
         </Link>
       </>
@@ -53,9 +52,10 @@ function Navbar() {
       <Link to="/userDetails">
         <Image
           rounded="full"
-          width="30px"
-          height="30px"
-          src="https://images.unsplash.com/photo-1517849845537-4d257902454a?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=3024&q=80"
+          width="40px"
+          height="40px"
+          objectFit="cover"
+          src={user.profilePicture}
         />
       </Link>
     );
@@ -128,7 +128,12 @@ function Navbar() {
   );
 
   const desktopLinks = (
-    <Box display="flex" justifyContent="space-around" flex="1">
+    <Box
+      display="flex"
+      justifyContent="space-around"
+      flex="1"
+      alignItems="center"
+    >
       <Link to="/">HOME</Link>
       <Link to="/allEvents">ALL EVENTS</Link>
       {user ? (

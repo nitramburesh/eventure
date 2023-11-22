@@ -10,54 +10,57 @@ import {
   Button,
 } from "@chakra-ui/react";
 import axios from "axios";
-import { useRecoilState } from "recoil";
+import { useRecoilState, useSetRecoilState } from "recoil";
 import { userState } from "../atoms";
 import { apiUrl } from "../atoms";
 import { useRecoilValue } from "recoil";
 import { useNavigate } from "react-router-dom";
-import { errorHeading, successHeading, normalHeading } from "../utils/Utils";
-function LoginPage(props) {
+import {
+  errorHeading,
+  successHeading,
+  normalHeading,
+  handleEnterPress,
+} from "../utils/Utils";
+import useDelayedRedirect from "../utils/useRedirectToHomepage";
+
+function LoginPage() {
   const baseApiUrl = useRecoilValue(apiUrl);
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
+  const [error, setError] = useState({ isError: false, message: "" });
   const [success, setSuccess] = useState(false);
-  const navigate = useNavigate();
-
-  const [user, setUser] = useRecoilState(userState);
-
-  const redirectToHomePage = () => {
-    setTimeout(() => navigate("/"), 2000);
-  };
-  const handleEnterPress = (event) => {
-    if (event.keyCode === 13) {
-      handleLogin();
-    }
-  };
+  const setUser = useSetRecoilState(userState);
+  const { redirectWithDelay } = useDelayedRedirect();
 
   const handleLogin = async () => {
     const loginData = {
       username: username,
       password: password,
     };
-    try {
-      await axios.post(baseApiUrl + "login", loginData, {withCredentials: true}).then(({ data }) => {
-        const loggedInUser = { id: data.id, username: data.username };
+
+    await axios
+      .post(baseApiUrl + "login", loginData, { withCredentials: true })
+      .then(({ data }) => {
+        const loggedInUser = {
+          id: data.id,
+          username: data.username,
+          profilePicture: data.profilePicture,
+        };
         setUser(loggedInUser);
         localStorage.setItem("token", document.cookie);
         localStorage.setItem("user", JSON.stringify(loggedInUser));
-        redirectToHomePage();
+        redirectWithDelay("/");
         setSuccess(true);
-      });
-    } catch (error) {
-      setError(error);
-    }
+      })
+      .catch((error) =>
+        setError({ isError: true, message: error.response.data }),
+      );
   };
-  const showHeading = () => {
+  const Heading = () => {
     if (success) {
       return successHeading("Success!", "Redirecting to homepage...");
-    } else if (error) {
-      return errorHeading("Error!", "Wrong credentials.");
+    } else if (error.isError) {
+      return errorHeading("Error!", error.message);
     } else {
       return normalHeading("Please log in.", "Insert your credentials.");
     }
@@ -66,7 +69,7 @@ function LoginPage(props) {
   return (
     <Center mt="100px">
       <VStack width="100%" maxWidth="500px" justifySelf="center" spacing="30px">
-        {showHeading()}
+        <Heading />
         <FormControl isRequired>
           <FormLabel htmlFor="username">Username</FormLabel>
           <Input
@@ -75,7 +78,7 @@ function LoginPage(props) {
             placeholder="Enter your username..."
             onChange={(event) => {
               setUsername(event.target.value);
-              setError(false);
+              setError({ isError: false, message: "" });
             }}
             onKeyDown={handleEnterPress}
           />
@@ -88,9 +91,9 @@ function LoginPage(props) {
             placeholder="Enter your password..."
             onChange={(event) => {
               setPassword(event.target.value);
-              setError(false);
+              setError({ isError: false, message: "" });
             }}
-            onKeyDown={handleEnterPress}
+            onKeyDown={(event) => handleEnterPress(event, handleLogin)}
           />
         </FormControl>
         <Button
