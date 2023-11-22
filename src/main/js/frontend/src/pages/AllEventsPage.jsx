@@ -6,6 +6,7 @@ import Event from "../components/Event";
 import {
   Button,
   Center,
+  Divider,
   Grid,
   Heading,
   HStack,
@@ -22,6 +23,9 @@ import ClickableTag from "../components/ClickableTag";
 import { getSelectedTags } from "../utils/Utils";
 import { AiFillDelete, AiOutlineSearch } from "react-icons/ai";
 import { CgHashtag } from "react-icons/cg";
+import useDeleteTag from "../utils/useDeleteTag";
+import useAddTag from "../utils/useAddTag";
+import useClearTags from "../utils/useClearTags";
 
 function AllEventsPage(props) {
   const baseApiUrl = useRecoilValue(apiUrl);
@@ -30,58 +34,55 @@ function AllEventsPage(props) {
   const location = useLocation();
   const params = new URLSearchParams(location.search);
   const selectedTags = getSelectedTags(params);
-  const navigate = useNavigate();
+  const { handleDeleteTag } = useDeleteTag(selectedTags);
+  const { handleAddTagFilter } = useAddTag();
+  const { handleClearTags } = useClearTags(selectedTags);
+
   useEffect(() => {
     axios.get(baseApiUrl + "events/all").then((response) => {
       setEvents(response.data);
     });
   }, []);
-  const handleDeleteTag = (tag) => {
-    selectedTags.delete(tag);
-    const tagList = [...selectedTags].join("_");
-    const query = tagList.length === 0 ? "" : `?tags=${tagList}`;
-    navigate(`/allEvents${query}`);
+  const NoTagsSelectedView = () => {
+    return (
+      <Text color="gray.500" fontSize="20px" flexGrow="1" textAlign="center">
+        No tags are selected...
+      </Text>
+    );
   };
-  const handleAddTag = () => {
-    selectedTags.add(search.tag);
-    setSearch({ ...search, tag: "" });
-    const tagList = [...selectedTags].join("_");
-    navigate(`/allEvents?tags=${tagList}`);
-  };
-  const handleClearTags = () => {
-    selectedTags.clear();
-    navigate("/allEvents");
+  const SelectedTagsView = () => {
+    return (
+      <>
+        <HStack flexGrow="1" justifyContent="center" flexWrap="wrap">
+          {[...selectedTags].map((tag) => (
+            <ClickableTag
+              onClick={() => handleDeleteTag(tag)}
+              tag={tag}
+              key={tag}
+              hoverStyles={{
+                bg: "red.400",
+                textDecoration: "line-through",
+              }}
+            />
+          ))}
+        </HStack>
+        <IconButton
+          onClick={() => handleClearTags()}
+          aria-label="clear all tags"
+          icon={<AiFillDelete />}
+          justifySelf="flex-end"
+          colorScheme="red"
+        />
+      </>
+    );
   };
   const SelectedTags = () => {
     return (
       <HStack w="50%">
         {selectedTags.size === 0 ? (
-          <Text
-            color="gray.500"
-            fontSize="20px"
-            flexGrow="1"
-            textAlign="center"
-          >
-            No tags are selected...
-          </Text>
+          <NoTagsSelectedView />
         ) : (
-          <>
-            <HStack flexGrow="1" justifyContent="center" flexWrap="wrap">
-              {[...selectedTags].map((tag) => (
-                <ClickableTag
-                  onClick={() => handleDeleteTag(tag)}
-                  tag={tag}
-                  key={tag}
-                />
-              ))}
-            </HStack>
-            <IconButton
-              onClick={() => handleClearTags()}
-              aria-label="clear all tags"
-              icon={<AiFillDelete />}
-              justifySelf="flex-end"
-            />
-          </>
+          <SelectedTagsView />
         )}
       </HStack>
     );
@@ -89,7 +90,7 @@ function AllEventsPage(props) {
   return (
     <Center p="10">
       <VStack w="full">
-        <Heading>All events</Heading>
+        <Heading size="lg">Search events</Heading>
         <InputGroup w="50%">
           <InputLeftAddon children={<AiOutlineSearch />} />
           <Input
@@ -113,14 +114,17 @@ function AllEventsPage(props) {
             <Button
               borderLeftRadius="0"
               colorScheme="teal"
-              onClick={() => handleAddTag()}
+              onClick={() =>
+                handleAddTagFilter(selectedTags, search, setSearch)
+              }
             >
               +
             </Button>
           </InputRightElement>
         </InputGroup>
         <SelectedTags />
-        <Grid templateColumns={{ base: "1fr", lg: "1fr 1fr" }} gap="10">
+        <Divider pt="10" />
+        <Grid templateColumns={{ base: "1fr", lg: "1fr 1fr" }} gap="10" pt="10">
           {events
             ?.filter((event_) => {
               return [...selectedTags].length === 0

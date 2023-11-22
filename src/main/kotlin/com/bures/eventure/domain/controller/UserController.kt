@@ -2,27 +2,21 @@ package com.bures.eventure.domain.controller
 
 import com.bures.eventure.domain.dto.user.UserEventDetailsDTO
 import com.bures.eventure.domain.dto.user.UserDTO
-import com.bures.eventure.domain.dto.user.UserEditDTO
+
+import com.bures.eventure.domain.dto.user.UserEditUsernameDTO
 import com.bures.eventure.domain.model.EditUserResponse
 import com.bures.eventure.domain.model.User
 import com.bures.eventure.repository.UserRepository
 import com.bures.eventure.service.EventService
 import com.bures.eventure.service.UserService
+import org.apache.coyote.Response
 import org.bson.types.ObjectId
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.security.access.prepost.PreAuthorize
-import org.springframework.web.bind.annotation.CrossOrigin
-import org.springframework.web.bind.annotation.GetMapping
-import org.springframework.web.bind.annotation.PatchMapping
-import org.springframework.web.bind.annotation.PathVariable
-import org.springframework.web.bind.annotation.PostMapping
-import org.springframework.web.bind.annotation.RequestBody
-import org.springframework.web.bind.annotation.RequestMapping
-import org.springframework.web.bind.annotation.ResponseBody
-import org.springframework.web.bind.annotation.ResponseStatus
-import org.springframework.web.bind.annotation.RestController
+import org.springframework.web.bind.annotation.*
+import org.springframework.web.multipart.MultipartFile
 
 @RestController
 @RequestMapping("/api/v1/users")
@@ -55,17 +49,31 @@ class UserController(private val userRepository: UserRepository, private val use
         }
         return ResponseEntity.notFound().build()
     }
-
-    @PatchMapping("/edit/{userId}")
-    fun editUser(@PathVariable userId: String, @RequestBody editUserPayload: UserEditDTO): ResponseEntity<Any> {
+    @PatchMapping("/edit/profilePicture/{userId}")
+    fun storeProfilePicture(@PathVariable userId: String, @RequestPart("profilePicture") profilePicture: MultipartFile): ResponseEntity<String>{
         val objectId = ObjectId(userId)
-        val editUserResponse = userService.editUser(objectId, editUserPayload)
-        return when (editUserResponse) {
-            is EditUserResponse.Success -> ResponseEntity.ok("User sucessfully updated!")
-            is EditUserResponse.NoChange -> ResponseEntity.ok("User not changed.")
+        return ResponseEntity.ok(userService.editProfilePicture(objectId, profilePicture))
+    }
+    @PatchMapping("/edit/username/{userId}")
+    fun editUsername(@PathVariable userId: String, @RequestBody editUserPayload: UserEditUsernameDTO): ResponseEntity<Any> {
+        val objectId = ObjectId(userId)
+        return when (val editUserResponse = userService.editUsername(objectId, editUserPayload)) {
+            is EditUserResponse.Success -> ResponseEntity.ok(editUserResponse)
+            is EditUserResponse.NoChange -> ResponseEntity.ok(editUserPayload.username)
             is EditUserResponse.UserNotFound -> ResponseEntity.notFound().build()
             is EditUserResponse.UsernameExists -> ResponseEntity.status(HttpStatus.CONFLICT)
                 .body("Username already exists. Choose a different username.")
         }
+
+
 }
+    @DeleteMapping("/{userId}")
+    fun deleteUser(@PathVariable userId: String): ResponseEntity<Any>{
+        val success = userService.deleteUser(ObjectId(userId))
+        return if (success){
+            ResponseEntity.ok("Deleted!")
+        }else{
+            return ResponseEntity.notFound().build()
+        }
+    }
 }

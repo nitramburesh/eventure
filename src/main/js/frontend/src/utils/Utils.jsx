@@ -1,4 +1,5 @@
 import { Heading, Text } from "@chakra-ui/react";
+import axios from "axios";
 
 export const errorHeading = (heading, description) => (
   <>
@@ -9,7 +10,9 @@ export const errorHeading = (heading, description) => (
     >
       {heading}
     </Heading>
-    <Text color="red.400">{description}</Text>
+    <Text color="red.400" fontSize={{ base: "lg", sm: "xl" }}>
+      {description}
+    </Text>
   </>
 );
 
@@ -60,4 +63,51 @@ export const formatDate = (date) => {
 };
 export const getSelectedTags = (params) => {
   return new Set(params.size === 0 ? [] : params.get("tags")?.split("_"));
+};
+
+export const handleLogout = async (baseApiUrl, setUser) => {
+  await axios.post(baseApiUrl + "logout");
+  await localStorage.clear();
+  await setUser(null);
+};
+
+export const handleEnterPress = (event, callback) => {
+  console.log("called");
+  if (event.keyCode === 13) {
+    return callback();
+  }
+};
+
+export const formatLocation = (location) => {
+  return (
+    location?.city +
+    ", " +
+    location?.streetAddress +
+    ", " +
+    location?.postalCode
+  );
+};
+export const sliceArticleDescription = (description) => {
+  if (description.length > 350) {
+    return description.slice(0, 350) + "...";
+  } else {
+    return description;
+  }
+};
+
+export const areInputsValid = (event, updateEvent) => {
+  validateInputs(event, updateEvent);
+  const objectList = Object.values(event);
+  const errorList = objectList.map((object) => object.error);
+  return !errorList.includes(undefined) && !errorList.includes(true);
+};
+const validateInputs = (event, updateEvent) => {
+  const arrayFromObject = Object.entries(event);
+  arrayFromObject.forEach((sublist) => {
+    const inputObject = sublist[1];
+    const inputKey = sublist[0];
+    if (inputObject.value === "") {
+      updateEvent({ [inputKey]: { value: "", error: true } });
+    }
+  });
 };

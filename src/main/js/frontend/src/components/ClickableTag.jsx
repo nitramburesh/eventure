@@ -1,17 +1,15 @@
 import { Button } from "@chakra-ui/react";
 import React from "react";
 
-const ClickableTag = ({ onClick, tag }) => {
+const ClickableTag = ({ onClick, tag, hoverStyles }) => {
   return (
     <Button
-      p={2}
+      h="30px"
+      p="2"
       borderRadius="lg"
-      bg="green.400"
+      colorScheme="teal"
       color="white"
-      _hover={{
-        bg: "red.400",
-        textDecoration: "line-through",
-      }}
+      _hover={hoverStyles}
       onClick={onClick}
     >
       {`#${tag.toLowerCase()}`}

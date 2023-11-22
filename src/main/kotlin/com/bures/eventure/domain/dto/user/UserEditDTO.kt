@@ -1,5 +1,7 @@
 package com.bures.eventure.domain.dto.user
 
-data class UserEditDTO(
+import org.bson.types.ObjectId
+
+data class UserEditUsernameDTO(
     val username: String
 )

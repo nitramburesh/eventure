@@ -1,13 +1,7 @@
 package com.bures.eventure.domain.dto.event
 
 import com.bures.eventure.domain.dto.comment.CommentDTO
-import com.bures.eventure.domain.dto.user.UserDTO
-import com.bures.eventure.domain.model.Comment
 import com.bures.eventure.domain.model.Location
-import com.bures.eventure.domain.model.User
-import com.google.type.DateTime
-import java.time.LocalDateTime
-import java.time.LocalTime
 import java.util.*
 
 data class EventDetailResponseDTO (
@@ -24,9 +18,12 @@ data class EventDetailResponseDTO (
     var createdDate: Date,
     var eventDate: Date,
     var isAttending: Boolean,
-    var isLiked : Boolean
+    var isLiked : Boolean,
+    var image: String,
 )
 data class Creator(
     val id: String,
-    val username: String
+    val username: String,
+    val profilePicture: String
+
 )

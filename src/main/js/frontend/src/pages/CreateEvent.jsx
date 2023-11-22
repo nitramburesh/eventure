@@ -1,4 +1,4 @@
-import React, { useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 
 import "flatpickr/dist/themes/material_green.css";
 import {
@@ -13,6 +13,7 @@ import {
   Input,
   InputGroup,
   InputLeftElement,
+  Text,
   Textarea,
   VStack,
 } from "@chakra-ui/react";
@@ -21,24 +22,28 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { useRecoilState, useRecoilValue } from "recoil";
-import { apiUrl, userState } from "../../atoms";
+import { apiUrl, userState } from "../atoms";
 import {
+  areInputsValid,
   errorHeading,
   handleUploadClick,
   normalHeading,
   successHeading,
-} from "../../utils/Utils";
+} from "../utils/Utils";
 import Flatpickr from "react-flatpickr";
-import "../../flatpickr.css";
-import ClickableTag from "../../components/ClickableTag";
+import "../flatpickr.css";
+import ClickableTag from "../components/ClickableTag";
+import { CiImageOff } from "react-icons/ci";
+import useDelayedRedirect from "../utils/useRedirectToHomepage";
 
-function CreateEvent(props) {
+function CreateEvent() {
   const datepickerRef = useRef();
   const defaultInputValue = { value: "" };
+  const [isLoading, setIsLoading] = useState(false);
   const baseApiUrl = useRecoilValue(apiUrl);
-  const [user, setUser] = useRecoilState(userState);
+  const user = useRecoilValue(userState);
   const [titleImage, setTitleImage] = useState("");
-  const [event, setEvent] = useState({
+  const [event_, setEvent] = useState({
     title: defaultInputValue,
     price: defaultInputValue,
     city: defaultInputValue,
@@ -46,26 +51,30 @@ function CreateEvent(props) {
     streetAddress: defaultInputValue,
     description: defaultInputValue,
     eventDate: defaultInputValue,
+    image: defaultInputValue,
   });
-  const [date, setDate] = useState();
   const [tag, setTag] = useState("");
   const [addedTags, setAddedTags] = useState([]);
   const [preview, setPreview] = useState();
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState(false);
-
   const [isImageSelected, setIsImageSelected] = useState(false);
   const inputFile = useRef(null);
-  const navigate = useNavigate();
+  const { redirectWithDelay } = useDelayedRedirect();
 
+  useEffect(() => {
+    const setColor = (color) => {
+      document.documentElement.style.setProperty("--border-color", color);
+    };
+    event_.eventDate.error ? setColor("#d34c46") : setColor("#e3e8ef");
+  }, [event_.eventDate]);
   const updateEvent = (newObject) => {
-    setEvent((event) => ({ ...event, ...newObject }));
+    setEvent((event_) => ({ ...event_, ...newObject }));
   };
 
   const handleFileUpload = (event) => {
     const selectedImage = event.target.files[0];
     const reader = new FileReader();
-
     reader.readAsDataURL(selectedImage);
     reader.onload = () => {
       if (reader.readyState === 2) {
@@ -74,56 +83,51 @@ function CreateEvent(props) {
     };
     setTitleImage(selectedImage);
     setIsImageSelected(true);
+    updateEvent({ image: { value: selectedImage, error: false } });
   };
 
-  const redirectToHomepage = () => {
-    return setTimeout(() => {
-      navigate("/");
-    }, 2000);
-  };
-  const validateInputs = () => {
-    const arrayFromObject = Object.entries(event);
-    arrayFromObject.forEach((sublist) => {
-      const inputObject = sublist[1];
-      const inputKey = sublist[0];
-      if (inputObject.value === "") {
-        updateEvent({ [inputKey]: { value: "", error: true } });
-      }
-    });
-  };
-  const areInputsValid = () => {
-    validateInputs();
-    const objectList = Object.values(event);
-    const errorList = objectList.map((object) => object.error);
-    return !errorList.includes(undefined) && !errorList.includes(true);
-  };
   const handleSubmit = async () => {
-    const formData = new FormData();
-    formData.append("image", titleImage);
-    const data = {
-      creatorId: user.id,
-      title: event.title.value,
-      price: event.price.value,
-      location: {
-        city: event.city.value,
-        streetAddress: event.streetAddress.value,
-        postalCode: event.postalCode.value,
-      },
-      description: event.description.value,
-      tags: addedTags,
-      createdDate: new Date().toISOString(),
-      eventDate: event.eventDate.value,
-      image: formData,
-    };
-    console.log(data);
-    if (areInputsValid()) {
+    const imageFormData = new FormData();
+    imageFormData.append("file", titleImage);
+    if (areInputsValid(event_, updateEvent)) {
+      setIsLoading(true);
       await axios
-        .post(baseApiUrl + "events", data)
-        .then(() => {
-          redirectToHomepage();
-          setSuccess(true);
+        .post(baseApiUrl + "events/image", imageFormData, {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
         })
-        .catch(() => setError(true));
+        .then((response) => {
+          updateEvent({
+            image: { value: response.data },
+          });
+          const data = {
+            creatorId: user.id,
+            title: event_.title.value,
+            price: event_.price.value,
+            location: {
+              city: event_.city.value,
+              streetAddress: event_.streetAddress.value,
+              postalCode: event_.postalCode.value,
+            },
+            description: event_.description.value,
+            tags: addedTags,
+            createdDate: new Date().toISOString(),
+            eventDate: event_.eventDate.value,
+            image: response.data,
+          };
+
+          return axios
+            .post(baseApiUrl + "events", data)
+            .then(() => {
+              redirectWithDelay("/");
+              setSuccess(true);
+            })
+            .catch(() => {
+              setIsLoading(false);
+              setError(true);
+            });
+        });
     }
   };
 
@@ -150,14 +154,35 @@ function CreateEvent(props) {
         w="75%"
       >
         <Box w={"60%"} pt="30px">
-          <VStack spacing="30px">
+          <VStack>
             {showHeading()}
-            {isImageSelected && <Image src={preview} rounded="xl" />}
+            {isImageSelected ? (
+              <Image src={preview} rounded="xl" />
+            ) : (
+              <Center
+                width="full"
+                height="200px"
+                flexDir="column"
+                bgColor="gray.50"
+                boxShadow="base"
+                borderRadius="lg"
+                cursor="pointer"
+                onClick={() => handleUploadClick(inputFile)}
+              >
+                <CiImageOff
+                  size="100px"
+                  color={event_.image.error ? "red" : "gray"}
+                />
+                <Text color={event_.image.error ? "red.500" : "gray.500"}>
+                  Image not selected...
+                </Text>
+              </Center>
+            )}
             <FormControl>
               <VStack gap="1" align="left">
                 <FormLabel htmlFor="title">Title</FormLabel>
                 <Input
-                  isInvalid={event.title.error}
+                  isInvalid={event_.title.error}
                   placeholder="Your event name goes here!"
                   id="title"
                   type="text"
@@ -175,7 +200,7 @@ function CreateEvent(props) {
                   <VStack w="30%" alignItems="left">
                     <FormLabel htmlFor="city">City</FormLabel>
                     <Input
-                      isInvalid={event.city.error}
+                      isInvalid={event_.city.error}
                       placeholder="Enter city..."
                       id="city"
                       onChange={(event) => {
@@ -189,7 +214,7 @@ function CreateEvent(props) {
                     <FormLabel htmlFor="street">Street address</FormLabel>
 
                     <Input
-                      isInvalid={event.streetAddress.error}
+                      isInvalid={event_.streetAddress.error}
                       placeholder="Enter street..."
                       id="street"
                       onChange={(event) => {
@@ -205,7 +230,7 @@ function CreateEvent(props) {
                   <VStack w="20%" alignItems="left">
                     <FormLabel htmlFor="postalCode">Postal code</FormLabel>
                     <Input
-                      isInvalid={event.postalCode.error}
+                      isInvalid={event_.postalCode.error}
                       type="number"
                       placeholder="Postal code..."
                       id="postalCode"
@@ -223,7 +248,7 @@ function CreateEvent(props) {
 
                 <FormLabel htmlFor="description">Description</FormLabel>
                 <Textarea
-                  isInvalid={event.description.error}
+                  isInvalid={event_.description.error}
                   id="description"
                   type="text"
                   height="300px"
@@ -245,7 +270,7 @@ function CreateEvent(props) {
                         children="$"
                       />
                       <Input
-                        isInvalid={event.price.error}
+                        isInvalid={event_.price.error}
                         placeholder="Price..."
                         type="number"
                         min="1"
@@ -290,7 +315,7 @@ function CreateEvent(props) {
                     <FormLabel htmlFor="date">Date</FormLabel>
                     <HStack w="full">
                       <Flatpickr
-                        value={date}
+                        value={event_.eventDate.value}
                         data-enable-time
                         onChange={([date]) => {
                           updateEvent({
@@ -328,6 +353,10 @@ function CreateEvent(props) {
                       }}
                       tag={tag}
                       key={tag}
+                      hoverStyles={{
+                        bg: "red.400",
+                        textDecoration: "line-through",
+                      }}
                     />
                   ))}
                 </HStack>
@@ -343,6 +372,7 @@ function CreateEvent(props) {
                 onChange={handleFileUpload}
               />
               <Button
+                isLoading={isLoading}
                 leftIcon={<FontAwesomeIcon icon={faImage} title="image" />}
                 onClick={() => handleUploadClick(inputFile)}
               >
@@ -350,7 +380,7 @@ function CreateEvent(props) {
               </Button>
               <Button
                 onClick={() => handleSubmit()}
-                isLoading={success}
+                isLoading={isLoading}
                 colorScheme="teal"
                 cursor={success ? "not-allowed" : "pointer"}
               >
