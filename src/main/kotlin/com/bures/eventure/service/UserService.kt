@@ -1,7 +1,6 @@
 package com.bures.eventure.service
 
 import com.bures.eventure.domain.dto.user.UserDetailsDTO
-
 import com.bures.eventure.domain.dto.user.UserEditUsernameDTO
 import com.bures.eventure.domain.dto.user.UserEventDetailsDTO
 import com.bures.eventure.domain.model.EditUserResponse
@@ -10,11 +9,8 @@ import com.bures.eventure.repository.CommentRepository
 import com.bures.eventure.repository.EventRepository
 import com.bures.eventure.repository.UserRepository
 import org.bson.types.ObjectId
-import org.springframework.beans.BeanUtils
-import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Service
 import org.springframework.web.multipart.MultipartFile
-import software.amazon.awssdk.regions.Region
 import java.util.*
 import javax.transaction.Transactional
 
@@ -25,13 +21,7 @@ class UserService(
     private val commentRepository: CommentRepository
 ) {
 
-    private val accessKeyId = "AKIA4IVY4ZYDIC5YQPOB"
-    private val secretAccessKey = "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"
-    private val region = Region.EU_NORTH_1
-    private val bucketName = "storage-eventure"
-
     fun save(user: User): User {
-
         return userRepository.insert(user)
     }
 
@@ -56,7 +46,8 @@ class UserService(
         if (maybeUser.isPresent) {
             val user = maybeUser.get()
 
-            val likedEvents = eventRepository.findAllById(user.likedEvents).map { mapEventToEventResponseDTO(it, userRepository) }
+            val likedEvents =
+                eventRepository.findAllById(user.likedEvents).map { mapEventToEventResponseDTO(it, userRepository) }
             val attendedEvents =
                 eventRepository.findAllById(user.attendedEvents).map { mapEventToEventResponseDTO(it, userRepository) }
 
@@ -79,7 +70,7 @@ class UserService(
         return if (maybeUser.isPresent) {
             val user = maybeUser.get()
             val userIdString = userId.toString()
-            val s3Service = S3Service(accessKeyId, secretAccessKey, region, bucketName)
+            val s3Service = S3Service()
             s3Service.uploadFile(userIdString, profilePicture.inputStream)
             user.profilePicture = "https://storage-eventure.s3.eu-north-1.amazonaws.com/${userIdString}"
             userRepository.save(user)
@@ -108,6 +99,7 @@ class UserService(
             EditUserResponse.UserNotFound
         }
     }
+
     @Transactional
     fun deleteUser(userId: ObjectId): Boolean {
         val maybeUser = userRepository.findById(userId)
@@ -131,8 +123,8 @@ class UserService(
 
             //filter out attendances confirmed by user
             val eventsAttendedByUser = eventRepository.findByAttendeesIn(user.id)
-            eventsAttendedByUser.forEach{ event ->
-                event.attendees = event.attendees.filter { it != user.id}
+            eventsAttendedByUser.forEach { event ->
+                event.attendees = event.attendees.filter { it != user.id }
                 eventRepository.save(event)
             }
 
@@ -141,7 +133,7 @@ class UserService(
             commentRepository.deleteAllById(commentIds)
 
             //delete profile picture image from storage
-            val s3Service = S3Service(accessKeyId, secretAccessKey, region, bucketName)
+            val s3Service = S3Service()
             eventIds.forEach { s3Service.deleteObject(it.toString()) }
             s3Service.deleteObject(user.id.toString())
 

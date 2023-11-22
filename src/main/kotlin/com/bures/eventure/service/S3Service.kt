@@ -1,5 +1,6 @@
 package com.bures.eventure.service
 
+import io.github.cdimascio.dotenv.Dotenv
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials
 import software.amazon.awssdk.regions.Region
 import software.amazon.awssdk.services.s3.S3Client
@@ -12,12 +13,14 @@ import java.nio.file.Path
 import java.nio.file.StandardCopyOption
 import java.util.*
 
-class S3Service(
-    accessKeyId: String,
-    secretAccessKey: String,
-    region: Region,
-    bucketName: String
-) {
+
+class S3Service() {
+    private val dotenv: Dotenv = Dotenv.load()
+    private val accessKeyId = dotenv.get("ACCESS_KEY_ID")
+    private val secretAccessKey = dotenv.get("SECRET_ACCESS_KEY")
+    private val region = Region.EU_NORTH_1
+    private val bucketName = dotenv.get("BUCKET_NAME")
+
     private val s3Client: S3Client = S3Client.builder()
         .region(region)
         .credentialsProvider { AwsBasicCredentials.create(accessKeyId, secretAccessKey) }
@@ -29,6 +32,7 @@ class S3Service(
         Files.copy(inputStream, tempFile, StandardCopyOption.REPLACE_EXISTING)
         return tempFile
     }
+
     private fun uploadFileToS3(key: String, file: Path) {
         val putObjectRequest = PutObjectRequest.builder()
             .bucket(s3Bucket)
@@ -37,14 +41,17 @@ class S3Service(
 
         s3Client.putObject(putObjectRequest, file)
     }
+
     private fun deleteTempFile(file: Path) {
         Files.deleteIfExists(file)
     }
+
     fun uploadFile(key: String, inputStream: InputStream) {
         val tempFile = createTempFile(inputStream)
         uploadFileToS3(key, tempFile)
         deleteTempFile(tempFile)
     }
+
     fun deleteObject(key: String) {
         val deleteObjectRequest = DeleteObjectRequest.builder()
             .bucket(s3Bucket)

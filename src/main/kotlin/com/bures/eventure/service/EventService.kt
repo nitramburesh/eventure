@@ -24,20 +24,12 @@ class EventService(
     private val userRepository: UserRepository,
     private val commentRepository: CommentRepository
 ) {
-    private val accessKeyId = "AKIA4IVY4ZYDIC5YQPOB"
-    private val secretAccessKey = "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"
-    private val region = Region.EU_NORTH_1
-    private val bucketName = "storage-eventure"
     fun createEvent(event: Event): Event {
         return eventRepository.insert(event);
     }
 
     fun storeImage(image: MultipartFile): String {
-        val accessKeyId = "AKIA4IVY4ZYDIC5YQPOB"
-        val secretAccessKey = "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"
-        val region = Region.EU_NORTH_1
-        val bucketName = "storage-eventure"
-        val s3Service = S3Service(accessKeyId, secretAccessKey, region, bucketName)
+        val s3Service = S3Service()
         val imageId = UUID.randomUUID().toString()
         s3Service.uploadFile(imageId, image.inputStream)
         return "https://storage-eventure.s3.eu-north-1.amazonaws.com/${imageId}"
@@ -45,7 +37,7 @@ class EventService(
 
     fun editEvent(eventId: ObjectId, editEventPayload: EditEventDTO): Boolean {
         val maybeEvent = eventRepository.findById(eventId)
-        if (maybeEvent.isPresent) {
+        return if (maybeEvent.isPresent) {
             val event = maybeEvent.get()
             event.title = editEventPayload.title
             event.location = editEventPayload.location
@@ -53,9 +45,9 @@ class EventService(
             event.tags = editEventPayload.tags
             event.eventDate = editEventPayload.eventDate
             eventRepository.save(event)
-            return true
+            true
         } else {
-            return false
+            false
         }
 
 
@@ -233,7 +225,7 @@ class EventService(
 
     fun deleteById(eventId: ObjectId, deletePayload: DeleteEventDTO): Boolean {
         eventRepository.deleteById(eventId)
-        val s3Service = S3Service(accessKeyId, secretAccessKey, region, bucketName)
+        val s3Service = S3Service()
         s3Service.deleteObject(deletePayload.imageId)
         return true
     }

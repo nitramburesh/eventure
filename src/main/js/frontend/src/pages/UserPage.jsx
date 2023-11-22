@@ -69,7 +69,7 @@ function UserPage() {
         } else {
           setError({
             isError: true,
-            message: "Error occured, please try again later...",
+            message: "Error occurred, please try again later...",
           });
         }
       });
