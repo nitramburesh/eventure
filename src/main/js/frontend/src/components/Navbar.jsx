@@ -1,4 +1,4 @@
-import React, { useRef, useState } from "react";
+import React, { useRef } from "react";
 
 import {
   Box,
@@ -18,13 +18,11 @@ import {
 import { Link } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faBars, faXmark } from "@fortawesome/free-solid-svg-icons";
-import { useRecoilState, useRecoilValue } from "recoil";
-import { apiUrl, userState } from "../atoms";
-import axios from "axios";
+import { useRecoilState } from "recoil";
+import { userState } from "../atoms";
 import { handleLogout } from "../utils/Utils";
 
 function Navbar() {
-  const baseApiUrl = useRecoilValue(apiUrl);
   const [isMobile] = useMediaQuery("(max-width: 768px)");
   const [user, setUser] = useRecoilState(userState);
   const { isOpen, onOpen, onClose } = useDisclosure();
@@ -39,7 +37,7 @@ function Navbar() {
         <Link
           to="/"
           onClick={() => {
-            handleLogout(baseApiUrl, setUser).then(() => onClose());
+            handleLogout(setUser).then(() => onClose());
           }}
         >
           LOG OUT
@@ -55,7 +53,7 @@ function Navbar() {
           width="40px"
           height="40px"
           objectFit="cover"
-          src={user.profilePicture}
+          src={user.profilePicture + `?${Date.now()}`}
         />
       </Link>
     );

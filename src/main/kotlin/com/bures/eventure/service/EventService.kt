@@ -3,15 +3,20 @@ package com.bures.eventure.service
 import com.bures.eventure.domain.dto.comment.CommentDTO
 import com.bures.eventure.domain.dto.comment.DeleteCommentDTO
 import com.bures.eventure.domain.dto.event.*
+import com.bures.eventure.domain.dto.response.GeneralResponse
+import com.bures.eventure.domain.dto.venue.VenueDTO
 import com.bures.eventure.domain.model.Comment
 import com.bures.eventure.domain.model.Event
 import com.bures.eventure.domain.model.User
+import com.bures.eventure.domain.model.Venue
 import com.bures.eventure.repository.CommentRepository
 import com.bures.eventure.repository.EventRepository
 import com.bures.eventure.repository.UserRepository
+import com.bures.eventure.repository.VenueRepository
 import org.bson.types.ObjectId
 import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Pageable
+import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Service
 import org.springframework.web.multipart.MultipartFile
 import software.amazon.awssdk.regions.Region
@@ -22,10 +27,12 @@ import java.util.*
 class EventService(
     private val eventRepository: EventRepository,
     private val userRepository: UserRepository,
-    private val commentRepository: CommentRepository
+    private val commentRepository: CommentRepository,
+    private val venueRepository: VenueRepository
 ) {
-    fun createEvent(event: Event): Event {
-        return eventRepository.insert(event);
+    fun createEvent(event: Event): GeneralResponse {
+        eventRepository.insert(event);
+        return GeneralResponse.Success
     }
 
     fun storeImage(image: MultipartFile): String {
@@ -35,19 +42,20 @@ class EventService(
         return "https://storage-eventure.s3.eu-north-1.amazonaws.com/${imageId}"
     }
 
-    fun editEvent(eventId: ObjectId, editEventPayload: EditEventDTO): Boolean {
+    fun editEvent(eventId: ObjectId, editEventPayload: EditEventDTO): GeneralResponse {
         val maybeEvent = eventRepository.findById(eventId)
+
         return if (maybeEvent.isPresent) {
             val event = maybeEvent.get()
             event.title = editEventPayload.title
-            event.location = editEventPayload.location
+            event.venueId = editEventPayload.venueId
             event.description = editEventPayload.description
             event.tags = editEventPayload.tags
             event.eventDate = editEventPayload.eventDate
             eventRepository.save(event)
-            true
+            GeneralResponse.Success
         } else {
-            false
+            GeneralResponse.NotFound
         }
 
 
@@ -56,7 +64,7 @@ class EventService(
     fun getAllEvents(): List<EventResponseDTO> {
         val eventResponse = eventRepository.findAll()
         val response = eventResponse.map { event ->
-            mapEventToEventResponseDTO(event, userRepository)
+            mapEventToEventResponseDTO(event, userRepository, venueRepository)
         }
         return response
     }
@@ -65,7 +73,7 @@ class EventService(
         val pageable: Pageable = PageRequest.of(0, amount)
 
         return eventRepository.findAllBy(pageable).map { event ->
-            mapEventToEventResponseDTO(event, userRepository)
+            mapEventToEventResponseDTO(event, userRepository, venueRepository)
         }
     }
 
@@ -84,13 +92,16 @@ class EventService(
                 id = it.id.toString(),
                 userId = maybeCommentAuthor.get().id.toString(),
                 username = maybeCommentAuthor.get().username,
-                date = it.date,
+                date = it.date.toString(),
                 message = it.message,
                 profilePicture = maybeCommentAuthor.get().profilePicture
             )
         }
         val isAttending = event.attendees.contains(viewingUser.id)
         val isLiked = viewingUser.likedEvents.contains(eventId)
+        val venues = venueRepository.findAll().map{mapVenueToVenueDTO(it)}
+        val venue = venueRepository.findById(ObjectId(event.venueId))
+        println(event.createdDate)
         return EventDetailResponseDTO(
             id = event.id.toString(),
             creator = Creator(
@@ -104,14 +115,14 @@ class EventService(
             likes = event.likes ?: 0,
             tags = event.tags,
             price = event.price,
-            createdDate = event.createdDate,
-            eventDate = event.eventDate,
+            createdDate = event.createdDate.toString(),
+            eventDate = event.eventDate.toString(),
             description = event.description,
-            location = event.location,
+            venues= venues,
+            venueId = venue.get().id.toString(),
             isAttending = isAttending,
             isLiked = isLiked,
             image = event.image,
-
             )
     }
 
@@ -211,23 +222,22 @@ class EventService(
     fun deleteEventComment(
         eventId: ObjectId,
         commentId: ObjectId
-    ): Boolean {
+    ): GeneralResponse {
         val maybeEvent = eventRepository.findById(eventId)
         if (maybeEvent.isPresent) {
             val event = maybeEvent.get()
             event.comments = event.comments?.minus(commentId)
             commentRepository.deleteById(commentId)
             eventRepository.save(event)
-            return true
+            return GeneralResponse.Success
         }
-        return false
+        return GeneralResponse.NotFound
     }
 
-    fun deleteById(eventId: ObjectId, deletePayload: DeleteEventDTO): Boolean {
+    fun deleteById(eventId: ObjectId, deletePayload: DeleteEventDTO) {
         eventRepository.deleteById(eventId)
         val s3Service = S3Service()
         s3Service.deleteObject(deletePayload.imageId)
-        return true
     }
 }
 
@@ -237,13 +247,14 @@ fun mapToCommentDTO(comment: Comment, username: String, profilePicture: String):
         userId = comment.userId,
         username = username,
         message = comment.message,
-        date = comment.date,
+        date = comment.date.toString(),
         profilePicture = profilePicture
     )
 }
 
-fun mapEventToEventResponseDTO(event: Event, userRepository: UserRepository): EventResponseDTO {
+fun mapEventToEventResponseDTO(event: Event, userRepository: UserRepository, venueRepository: VenueRepository): EventResponseDTO {
     val user = userRepository.findById(ObjectId(event.creatorId)).get()
+    val venue = venueRepository.findById(ObjectId(event.venueId)).get()
     return EventResponseDTO(
         id = event.id?.toString() ?: "",
         creator = Creator(
@@ -252,15 +263,24 @@ fun mapEventToEventResponseDTO(event: Event, userRepository: UserRepository): Ev
             profilePicture = user.profilePicture
         ),
         title = event.title,
-        location = event.location,
+        venue = mapVenueToVenueDTO(venue),
         description = event.description,
         tags = event.tags,
         price = event.price,
-        createdDate = event.createdDate,
-        eventDate = event.eventDate,
+        createdDate = event.createdDate.toString(),
+        eventDate = event.eventDate.toString(),
         image = event.image
     )
-
-
 }
 
+fun mapVenueToVenueDTO(venue: Venue): VenueDTO {
+    return VenueDTO(
+        id = venue.id.toString(),
+        name = venue.name,
+        address = venue.address,
+        city = venue.city,
+        country = venue.country,
+        postalCode = venue.postalCode
+
+    )
+}

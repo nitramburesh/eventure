@@ -1,30 +1,26 @@
 import React, { useState } from "react";
 
 import {
-  FormControl,
-  VStack,
-  FormLabel,
-  Input,
-  Heading,
-  Center,
   Button,
+  Center,
+  FormControl,
+  FormLabel,
+  Heading,
+  Input,
+  VStack,
 } from "@chakra-ui/react";
-import axios from "axios";
-import { useRecoilState, useSetRecoilState } from "recoil";
+import { useSetRecoilState } from "recoil";
 import { userState } from "../atoms";
-import { apiUrl } from "../atoms";
-import { useRecoilValue } from "recoil";
-import { useNavigate } from "react-router-dom";
 import {
+  axiosInstance,
   errorHeading,
-  successHeading,
-  normalHeading,
   handleEnterPress,
+  normalHeading,
+  successHeading,
 } from "../utils/Utils";
 import useDelayedRedirect from "../utils/useRedirectToHomepage";
 
 function LoginPage() {
-  const baseApiUrl = useRecoilValue(apiUrl);
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState({ isError: false, message: "" });
@@ -38,8 +34,8 @@ function LoginPage() {
       password: password,
     };
 
-    await axios
-      .post(baseApiUrl + "login", loginData, { withCredentials: true })
+    await axiosInstance
+      .post("login", loginData, { withCredentials: true })
       .then(({ data }) => {
         const loggedInUser = {
           id: data.id,

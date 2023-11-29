@@ -8,23 +8,24 @@ import {
   FormControl,
   FormHelperText,
   FormLabel,
+  Heading,
   HStack,
   Image,
   Input,
   InputGroup,
   InputLeftElement,
+  Select,
   Text,
   Textarea,
   VStack,
 } from "@chakra-ui/react";
 import { faImage } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import axios from "axios";
-import { useNavigate } from "react-router-dom";
-import { useRecoilState, useRecoilValue } from "recoil";
-import { apiUrl, userState } from "../atoms";
+import { useRecoilValue } from "recoil";
+import { userState } from "../atoms";
 import {
   areInputsValid,
+  axiosInstance,
   errorHeading,
   handleUploadClick,
   normalHeading,
@@ -37,18 +38,16 @@ import { CiImageOff } from "react-icons/ci";
 import useDelayedRedirect from "../utils/useRedirectToHomepage";
 
 function CreateEvent() {
+  const [isLoading, setIsLoading] = useState(false);
   const datepickerRef = useRef();
   const defaultInputValue = { value: "" };
-  const [isLoading, setIsLoading] = useState(false);
-  const baseApiUrl = useRecoilValue(apiUrl);
   const user = useRecoilValue(userState);
   const [titleImage, setTitleImage] = useState("");
+  const [venues, setVenues] = useState([]);
   const [event_, setEvent] = useState({
     title: defaultInputValue,
     price: defaultInputValue,
-    city: defaultInputValue,
-    postalCode: defaultInputValue,
-    streetAddress: defaultInputValue,
+    venueId: defaultInputValue,
     description: defaultInputValue,
     eventDate: defaultInputValue,
     image: defaultInputValue,
@@ -63,6 +62,7 @@ function CreateEvent() {
   const { redirectWithDelay } = useDelayedRedirect();
 
   useEffect(() => {
+    axiosInstance("venues/all").then((response) => setVenues(response.data));
     const setColor = (color) => {
       document.documentElement.style.setProperty("--border-color", color);
     };
@@ -70,6 +70,7 @@ function CreateEvent() {
   }, [event_.eventDate]);
   const updateEvent = (newObject) => {
     setEvent((event_) => ({ ...event_, ...newObject }));
+    setError(false);
   };
 
   const handleFileUpload = (event) => {
@@ -89,10 +90,11 @@ function CreateEvent() {
   const handleSubmit = async () => {
     const imageFormData = new FormData();
     imageFormData.append("file", titleImage);
+
     if (areInputsValid(event_, updateEvent)) {
       setIsLoading(true);
-      await axios
-        .post(baseApiUrl + "events/image", imageFormData, {
+      await axiosInstance
+        .post("events/image", imageFormData, {
           headers: {
             "Content-Type": "multipart/form-data",
           },
@@ -105,11 +107,7 @@ function CreateEvent() {
             creatorId: user.id,
             title: event_.title.value,
             price: event_.price.value,
-            location: {
-              city: event_.city.value,
-              streetAddress: event_.streetAddress.value,
-              postalCode: event_.postalCode.value,
-            },
+            venueId: event_.venueId.value,
             description: event_.description.value,
             tags: addedTags,
             createdDate: new Date().toISOString(),
@@ -117,8 +115,8 @@ function CreateEvent() {
             image: response.data,
           };
 
-          return axios
-            .post(baseApiUrl + "events", data)
+          return axiosInstance
+            .post("events", data)
             .then(() => {
               redirectWithDelay("/");
               setSuccess(true);
@@ -195,57 +193,24 @@ function CreateEvent() {
                 <FormHelperText>
                   Be descriptive when naming your event.
                 </FormHelperText>
-
-                <HStack w="full">
-                  <VStack w="30%" alignItems="left">
-                    <FormLabel htmlFor="city">City</FormLabel>
-                    <Input
-                      isInvalid={event_.city.error}
-                      placeholder="Enter city..."
-                      id="city"
-                      onChange={(event) => {
-                        updateEvent({
-                          city: { value: event.target.value, error: false },
-                        });
-                      }}
-                    />
-                  </VStack>
-                  <VStack w="50%" alignItems="left">
-                    <FormLabel htmlFor="street">Street address</FormLabel>
-
-                    <Input
-                      isInvalid={event_.streetAddress.error}
-                      placeholder="Enter street..."
-                      id="street"
-                      onChange={(event) => {
-                        updateEvent({
-                          streetAddress: {
-                            value: event.target.value,
-                            error: false,
-                          },
-                        });
-                      }}
-                    />
-                  </VStack>
-                  <VStack w="20%" alignItems="left">
-                    <FormLabel htmlFor="postalCode">Postal code</FormLabel>
-                    <Input
-                      isInvalid={event_.postalCode.error}
-                      type="number"
-                      placeholder="Postal code..."
-                      id="postalCode"
-                      onChange={(event) => {
-                        updateEvent({
-                          postalCode: {
-                            value: event.target.value,
-                            error: false,
-                          },
-                        });
-                      }}
-                    />
-                  </VStack>
-                </HStack>
-
+                <FormLabel htmlFor="venue">Venue</FormLabel>
+                <Select
+                  placeholder="Select option"
+                  id="venue"
+                  onChange={(event) =>
+                    updateEvent({
+                      venueId: { value: event.target.value, error: false },
+                    })
+                  }
+                  isInvalid={event_.venueId.error}
+                >
+                  {venues?.map((venue) => (
+                    <option
+                      value={venue.id}
+                      key={venue.id}
+                    >{`${venue.name}, ${venue.city}, ${venue.address} ${venue.postalCode}`}</option>
+                  ))}
+                </Select>
                 <FormLabel htmlFor="description">Description</FormLabel>
                 <Textarea
                   isInvalid={event_.description.error}

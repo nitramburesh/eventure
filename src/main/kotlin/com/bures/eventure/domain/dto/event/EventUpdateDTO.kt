@@ -7,5 +7,5 @@ data class EventUpdateDTO(
     val userId: String?,
     val likes: Int?,
     val isAttending: Boolean,
-    val comment: Comment?
+    val comment: Comment?,
 )

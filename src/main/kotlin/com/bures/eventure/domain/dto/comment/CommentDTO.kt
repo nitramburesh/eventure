@@ -1,12 +1,13 @@
 package com.bures.eventure.domain.dto.comment
 
-import java.util.Date
+import java.time.LocalDateTime
+
 
 data class CommentDTO (
     val id: String,
     val userId: String,
     val username: String,
     val message: String,
-    val date: Date,
+    val date: String,
     val profilePicture : String
 )

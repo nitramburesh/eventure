@@ -9,7 +9,11 @@ import {
   Wrap,
   WrapItem,
 } from "@chakra-ui/react";
-import { formatDateTime, sliceArticleDescription } from "../utils/Utils";
+import {
+  formatDateTime,
+  formatVenue,
+  sliceArticleDescription,
+} from "../utils/Utils";
 import ClickableTag from "./ClickableTag";
 import useTagNavigation from "../utils/useTagNagivate";
 import EventAuthor from "./EventAuthor";
@@ -70,7 +74,8 @@ function Event({ props }) {
                   {props.title}
                 </Link>
               </Heading>
-              <Text color="gray.500">{formatDateTime(props.eventDate)}</Text>
+              <Text color="gray.700">{formatDateTime(props.eventDate)}</Text>
+              <Text color="gray.500">{formatVenue(props.venue)}</Text>
               <Text as="p" fontSize="md" marginTop="2">
                 {sliceArticleDescription(props.description)}
               </Text>

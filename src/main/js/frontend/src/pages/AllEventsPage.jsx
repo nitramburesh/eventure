@@ -1,7 +1,4 @@
 import React, { useEffect, useState } from "react";
-import axios from "axios";
-import { apiUrl } from "../atoms";
-import { useRecoilValue } from "recoil";
 import Event from "../components/Event";
 import {
   Button,
@@ -18,17 +15,18 @@ import {
   Text,
   VStack,
 } from "@chakra-ui/react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 import ClickableTag from "../components/ClickableTag";
-import { getSelectedTags } from "../utils/Utils";
+import { axiosInstance, getSelectedTags } from "../utils/Utils";
 import { AiFillDelete, AiOutlineSearch } from "react-icons/ai";
 import { CgHashtag } from "react-icons/cg";
 import useDeleteTag from "../utils/useDeleteTag";
 import useAddTag from "../utils/useAddTag";
 import useClearTags from "../utils/useClearTags";
+import LoadingWrapper from "../components/LoadingWrapper";
 
 function AllEventsPage(props) {
-  const baseApiUrl = useRecoilValue(apiUrl);
+  const [isLoading, setIsLoading] = useState(false);
   const [events, setEvents] = useState();
   const [search, setSearch] = useState({ title: "", tag: "" });
   const location = useLocation();
@@ -39,9 +37,14 @@ function AllEventsPage(props) {
   const { handleClearTags } = useClearTags(selectedTags);
 
   useEffect(() => {
-    axios.get(baseApiUrl + "events/all").then((response) => {
-      setEvents(response.data);
-    });
+    setIsLoading(true);
+    axiosInstance
+      .get("events/all")
+      .then((response) => {
+        setEvents(response.data);
+        setIsLoading(false);
+      })
+      .catch(() => setIsLoading(false));
   }, []);
   const NoTagsSelectedView = () => {
     return (
@@ -88,58 +91,68 @@ function AllEventsPage(props) {
     );
   };
   return (
-    <Center p="10">
-      <VStack w="full">
-        <Heading size="lg">Search events</Heading>
-        <InputGroup w="50%">
-          <InputLeftAddon children={<AiOutlineSearch />} />
-          <Input
-            placeholder="Search events by title..."
-            value={search.title}
-            onChange={(event) =>
-              setSearch({ ...search, title: event.target.value })
-            }
-          />
-        </InputGroup>
-        <InputGroup w="50%">
-          <InputLeftAddon children={<CgHashtag />} />
-          <Input
-            placeholder="Search by tags..."
-            value={search.tag}
-            onChange={(event) =>
-              setSearch({ ...search, tag: event.target.value })
-            }
-          />
-          <InputRightElement>
-            <Button
-              borderLeftRadius="0"
-              colorScheme="teal"
-              onClick={() =>
-                handleAddTagFilter(selectedTags, search, setSearch)
+    <LoadingWrapper isLoading={isLoading}>
+      <Center p="10">
+        <VStack w="full">
+          <Heading size="lg">Search events</Heading>
+          <InputGroup w="50%">
+            <InputLeftAddon children={<AiOutlineSearch />} />
+            <Input
+              placeholder="Search events by title..."
+              value={search.title}
+              onChange={(event) =>
+                setSearch({ ...search, title: event.target.value })
               }
-            >
-              +
-            </Button>
-          </InputRightElement>
-        </InputGroup>
-        <SelectedTags />
-        <Divider pt="10" />
-        <Grid templateColumns={{ base: "1fr", lg: "1fr 1fr" }} gap="10" pt="10">
-          {events
-            ?.filter((event_) => {
-              return [...selectedTags].length === 0
-                ? true
-                : [...selectedTags].some((tag) => event_.tags.includes(tag));
-            })
-            .filter((event_) =>
-              event_.title.toLowerCase().includes(search.title.toLowerCase()),
-            )
-            .map((event_) => (
-              <Event props={event_} key={event_.id} />
-            ))}
-        </Grid>
-      </VStack>
-    </Center>
+            />
+          </InputGroup>
+          <InputGroup w="50%">
+            <InputLeftAddon children={<CgHashtag />} />
+            <Input
+              placeholder="Search by tags..."
+              value={search.tag}
+              onChange={(event) =>
+                setSearch({ ...search, tag: event.target.value })
+              }
+            />
+            <InputRightElement>
+              <Button
+                borderLeftRadius="0"
+                colorScheme="teal"
+                onClick={() =>
+                  handleAddTagFilter(selectedTags, search, setSearch)
+                }
+              >
+                +
+              </Button>
+            </InputRightElement>
+          </InputGroup>
+          <SelectedTags />
+          <Divider pt="10" />
+          <Grid
+            templateColumns={{ base: "1fr", lg: "1fr 1fr" }}
+            gap="10"
+            pt="10"
+          >
+            {events
+              ?.filter((event_) => {
+                return [...selectedTags].length === 0
+                  ? true
+                  : [...selectedTags].some((tag) =>
+                      event_.tags
+                        .map((tag) => tag.toLowerCase())
+                        .includes(tag.toLowerCase()),
+                    );
+              })
+              .filter((event_) =>
+                event_.title.toLowerCase().includes(search.title.toLowerCase()),
+              )
+              .map((event_) => (
+                <Event props={event_} key={event_.id} />
+              ))}
+          </Grid>
+        </VStack>
+      </Center>
+    </LoadingWrapper>
   );
 }
 

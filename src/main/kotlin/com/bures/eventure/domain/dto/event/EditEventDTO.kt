@@ -6,8 +6,8 @@ import java.util.Date
 
 data class EditEventDTO(
     val title: String,
-    val location: Location,
     val description: String,
     val tags: List<String>,
-    var eventDate: Date,
+    var eventDate: LocalDateTime,
+    var venueId: String,
 )
