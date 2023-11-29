@@ -42,6 +42,7 @@ fun configure(http: ServerHttpSecurity): SecurityWebFilterChain{
             .pathMatchers("/api/v1/register").permitAll()
             .pathMatchers("/api/v1/events/**").permitAll()
             .pathMatchers("/api/v1/users/**").permitAll()
+            .pathMatchers("/api/v1/venues/**").permitAll()
             .pathMatchers("/api/v1/events/all").permitAll()
 //            .pathMatchers("/api/v1/**").permitAll()
 //            authorizeHttpRequest.requestMatchers( "/api/v1/users/**").authenticated()

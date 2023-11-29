@@ -2,6 +2,7 @@ package com.bures.eventure.domain.controller
 
 import com.bures.eventure.domain.dto.comment.DeleteCommentDTO
 import com.bures.eventure.domain.dto.event.*
+import com.bures.eventure.domain.dto.response.GeneralResponse
 import com.bures.eventure.domain.model.Event
 import com.bures.eventure.repository.CommentRepository
 import com.bures.eventure.repository.EventRepository
@@ -22,8 +23,11 @@ class EventController(
 ) {
 
     @PostMapping("")
-    fun createEvent(@RequestBody event: Event): ResponseEntity<Event> {
-        return ResponseEntity.ok(eventService.createEvent(event))
+    fun createEvent(@RequestBody event: Event): ResponseEntity<Any> {
+        return when (eventService.createEvent(event)){
+            GeneralResponse.Success -> ResponseEntity.ok().build()
+            GeneralResponse.NotFound -> ResponseEntity.notFound().build()
+        }
     }
 
     @PostMapping("/image")
@@ -52,12 +56,10 @@ class EventController(
     }
 
     @PatchMapping("/{eventId}/edit")
-    fun editEvent(@PathVariable eventId: String, @RequestBody editEventPayload: EditEventDTO): ResponseEntity<Any> {
-        val success = eventService.editEvent(ObjectId(eventId), editEventPayload)
-        return if (success) {
-            ResponseEntity.ok("Event updated")
-        } else {
-            ResponseEntity.status(HttpStatus.NOT_FOUND).body("Event not found.")
+    fun editEvent(@PathVariable eventId: String, @RequestBody editEventPayload: EditEventDTO): ResponseEntity<Unit> {
+        return when (eventService.editEvent(ObjectId(eventId), editEventPayload)){
+            GeneralResponse.Success -> ResponseEntity.ok().build()
+            GeneralResponse.NotFound -> ResponseEntity.notFound().build()
         }
     }
 
@@ -109,21 +111,15 @@ class EventController(
         @PathVariable eventId: String,
         @RequestBody deletePayload: DeleteCommentDTO
     ): ResponseEntity<String> {
-        val success = eventService.deleteEventComment(ObjectId(eventId), ObjectId(deletePayload.commentId))
-        return if (success) {
-            ResponseEntity.ok("Successfully deleted!")
-        } else {
-            ResponseEntity.status(HttpStatus.NOT_FOUND).body("Event not found.")
+        return when (eventService.deleteEventComment(ObjectId(eventId), ObjectId(deletePayload.commentId))){
+            GeneralResponse.Success -> ResponseEntity.ok().build()
+            GeneralResponse.NotFound -> ResponseEntity.notFound().build()
         }
     }
 
     @DeleteMapping("/{eventId}")
     fun deleteById(@PathVariable eventId: String, @RequestBody deletePayload: DeleteEventDTO): ResponseEntity<String> {
-        val success = eventService.deleteById(ObjectId(eventId), deletePayload)
-        return if (success) {
-            ResponseEntity.ok("Event deleted.")
-        } else {
-            ResponseEntity.notFound().build()
-        }
+        eventService.deleteById(ObjectId(eventId), deletePayload)
+        return ResponseEntity.ok().build()
     }
 }

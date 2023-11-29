@@ -1,5 +1,6 @@
 package com.bures.eventure.service
 
+import com.bures.eventure.domain.dto.response.GeneralResponse
 import com.bures.eventure.domain.dto.user.UserDetailsDTO
 import com.bures.eventure.domain.dto.user.UserEditUsernameDTO
 import com.bures.eventure.domain.dto.user.UserEventDetailsDTO
@@ -8,6 +9,7 @@ import com.bures.eventure.domain.model.User
 import com.bures.eventure.repository.CommentRepository
 import com.bures.eventure.repository.EventRepository
 import com.bures.eventure.repository.UserRepository
+import com.bures.eventure.repository.VenueRepository
 import org.bson.types.ObjectId
 import org.springframework.stereotype.Service
 import org.springframework.web.multipart.MultipartFile
@@ -18,7 +20,8 @@ import javax.transaction.Transactional
 class UserService(
     private val userRepository: UserRepository,
     private val eventRepository: EventRepository,
-    private val commentRepository: CommentRepository
+    private val commentRepository: CommentRepository,
+    private val venueRepository: VenueRepository
 ) {
 
     fun save(user: User): User {
@@ -47,9 +50,9 @@ class UserService(
             val user = maybeUser.get()
 
             val likedEvents =
-                eventRepository.findAllById(user.likedEvents).map { mapEventToEventResponseDTO(it, userRepository) }
+                eventRepository.findAllById(user.likedEvents).map { mapEventToEventResponseDTO(it, userRepository, venueRepository) }
             val attendedEvents =
-                eventRepository.findAllById(user.attendedEvents).map { mapEventToEventResponseDTO(it, userRepository) }
+                eventRepository.findAllById(user.attendedEvents).map { mapEventToEventResponseDTO(it, userRepository, venueRepository) }
 
             return Optional.of(
                 UserDetailsDTO(
@@ -101,7 +104,7 @@ class UserService(
     }
 
     @Transactional
-    fun deleteUser(userId: ObjectId): Boolean {
+    fun deleteUser(userId: ObjectId): GeneralResponse {
         val maybeUser = userRepository.findById(userId)
         return if (maybeUser.isPresent) {
 
@@ -139,10 +142,9 @@ class UserService(
 
             //delete user itself
             userRepository.deleteById(user.id)
-
-            true
+            GeneralResponse.Success
         } else {
-            false
+            GeneralResponse.NotFound
         }
     }
 

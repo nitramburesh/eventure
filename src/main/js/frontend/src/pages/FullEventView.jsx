@@ -10,14 +10,16 @@ import {
   VStack,
 } from "@chakra-ui/react";
 import { useParams } from "react-router-dom";
-import axios from "axios";
-import { apiUrl, userState } from "../atoms";
-import { useRecoilState, useRecoilValue } from "recoil";
-import { valuesAreEmpty } from "../utils/Utils";
-import Wrapper from "../components/Wrapper";
+import { userState } from "../atoms";
+import { useRecoilState } from "recoil";
+import { axiosInstance, valuesAreEmpty } from "../utils/Utils";
+import LoadingWrapper from "../components/LoadingWrapper";
 import EventDetails from "../components/EventDetails";
 import EventEdit from "../components/EventEdit";
 import Comment from "../components/Comment";
+import { logDOM } from "@testing-library/react";
+import useRedirectToHomepage from "../utils/useRedirectToHomepage";
+import useDelayedRedirect from "../utils/useRedirectToHomepage";
 
 function FullEventView(props) {
   const [event, setEvent] = useState({});
@@ -27,14 +29,14 @@ function FullEventView(props) {
     error: { isError: false, message: "" },
   });
   const { id } = useParams();
-  const baseApiUrl = useRecoilValue(apiUrl);
   const [user, setUser] = useRecoilState(userState);
   const [isLiked, setIsLiked] = useState(false);
   const [isCommentLoading, setIsCommentLoading] = useState(false);
   const [isEventLoading, setIsEventLoading] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const isAuthor = event.creator?.id === user?.id;
-
+  const venue = event?.venues?.find((venue) => venue.id === event.venueId);
+  const { redirectWithDelay } = useDelayedRedirect();
   const setCommentError = (message) => {
     setComment({
       error: { isError: true, message: message },
@@ -45,7 +47,7 @@ function FullEventView(props) {
   useEffect(async () => {
     setIsEventLoading(true);
     try {
-      const eventResponse = await axios.get(baseApiUrl + `events/${id}`, {
+      const eventResponse = await axiosInstance.get(`events/${id}`, {
         params: { userId: user.id },
       });
       setEvent(eventResponse.data);
@@ -64,9 +66,9 @@ function FullEventView(props) {
       : { ...event, likes: ++event.likes };
 
     setEvent(updatedEvent);
-    axios
+    axiosInstance
       .patch(
-        baseApiUrl + `events/${id}/likes`,
+        `events/${id}/likes`,
         {
           userId: user.id,
           likes: event.likes,
@@ -85,8 +87,8 @@ function FullEventView(props) {
         }
       : { ...event, attendees: [...event.attendees, user.id] };
     setEvent(updatedEvent);
-    axios
-      .patch(baseApiUrl + `events/${id}/attendees`, {
+    axiosInstance
+      .patch(`events/${id}/attendees`, {
         userId: user.id,
         isAttending: !isAttending,
       })
@@ -98,8 +100,8 @@ function FullEventView(props) {
   const handlePostComment = () => {
     setIsCommentLoading(true);
     if (!valuesAreEmpty([comment.value.trim()])) {
-      axios
-        .post(baseApiUrl + `events/${id}/comments`, {
+      axiosInstance
+        .post(`events/${id}/comments`, {
           comment: {
             userId: user.id,
             message: comment.value,
@@ -121,9 +123,18 @@ function FullEventView(props) {
       setCommentError("Value cannot be empty.");
     }
   };
+  const handleDeleteEvent = () => {
+    setIsEventLoading(true);
+    axiosInstance
+      .delete(`events/${id}`, { data: { imageId: id } })
+      .then(() => {
+        redirectWithDelay("/");
+      })
+      .catch(() => setIsEventLoading(false));
+  };
 
   return (
-    <Wrapper isLoading={isEventLoading}>
+    <LoadingWrapper isLoading={isEventLoading}>
       <Center>
         <VStack width="80%" justifySelf="center" spacing="30px" mt="50px">
           <Image
@@ -135,6 +146,7 @@ function FullEventView(props) {
           <VStack width="full" spacing="30px">
             {isEditing ? (
               <EventEdit
+                venue={venue}
                 event={event}
                 setIsNotEditing={() => setIsEditing(false)}
                 isEventLoading={isEventLoading}
@@ -143,6 +155,7 @@ function FullEventView(props) {
             ) : (
               <>
                 <EventDetails
+                  venue={venue}
                   event={event}
                   isLiked={isLiked}
                   isAttending={isAttending}
@@ -150,6 +163,7 @@ function FullEventView(props) {
                   handleLikedEvent={() => handleLikedEvent()}
                   handleAttendedEvent={() => handleAttendedEvent()}
                   setIsEditing={() => setIsEditing(true)}
+                  handleDeleteEvent={() => handleDeleteEvent()}
                 />
                 <Divider />
                 <VStack w="80%" gap="5">
@@ -204,7 +218,7 @@ function FullEventView(props) {
           </VStack>
         </VStack>
       </Center>
-    </Wrapper>
+    </LoadingWrapper>
   );
 }
 

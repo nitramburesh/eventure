@@ -1,15 +1,11 @@
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
-import { handleLogout } from "./Utils";
-import { useRecoilValue } from "recoil";
-import { apiUrl } from "../atoms";
+import { axiosInstance, handleLogout } from "./Utils";
 
 const useDeleteUser = () => {
-  const baseApiUrl = useRecoilValue(apiUrl);
   const navigate = useNavigate();
   const handleDeleteUser = async (user, setUser) => {
-    await axios.delete(baseApiUrl + `users/${user.id}`).then((res) => {
-      handleLogout(baseApiUrl, setUser);
+    await axiosInstance.delete(`users/${user.id}`).then((res) => {
+      handleLogout(setUser);
     });
     await navigate("/");
   };

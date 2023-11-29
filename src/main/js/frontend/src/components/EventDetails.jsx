@@ -7,7 +7,7 @@ import {
   Text,
   VStack,
 } from "@chakra-ui/react";
-import { formatDate, formatDateTime, formatLocation } from "../utils/Utils";
+import { formatDate, formatDateTime, formatVenue } from "../utils/Utils";
 import React from "react";
 import {
   BsPencilFill,
@@ -16,7 +16,6 @@ import {
 } from "react-icons/bs";
 import { AiFillDelete, AiFillHeart, AiOutlineHeart } from "react-icons/ai";
 import ClickableTag from "./ClickableTag";
-import { useLocation, useNavigate } from "react-router-dom";
 import useTagNavigation from "../utils/useTagNagivate";
 
 function EventDetails(props) {
@@ -50,14 +49,11 @@ function EventDetails(props) {
   return (
     <>
       <Heading>{props.event.title}</Heading>
-      <Heading as={"h2"} size={"l"}>
-        {props.location}
-      </Heading>
       <Text fontSize="20px" color="gray.700">
-        {formatDateTime(props.event.eventDate)}
+        {formatVenue(props.venue)}
       </Text>
       <Text fontSize="20px" color="gray.700">
-        {formatLocation(props.event.location)}
+        {formatDateTime(props.event.eventDate)}
       </Text>
       <Text textAlign="justify" w="80%">
         {props.event.description}
@@ -132,7 +128,7 @@ function EventDetails(props) {
               EDIT EVENT
             </Button>
             <Button
-              onClick={props.setIsEditing}
+              onClick={props.handleDeleteEvent}
               colorScheme="red"
               display="flex"
               gap="2"

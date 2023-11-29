@@ -53,7 +53,7 @@ export const formatDateTime = (date) => {
   const dateObject = new Date(date);
   const year = dateObject.getFullYear();
   const month = dateObject.toLocaleString("default", { month: "numeric" });
-  const day = dateObject.getDay();
+  const day = dateObject.getDate();
   const hours = dateObject.getHours().toString().padStart(2, "0");
   const minutes = dateObject.getMinutes().toString().padStart(2, "0");
   return `${day}.${month}.${year} at ${hours}:${minutes}`;
@@ -65,8 +65,8 @@ export const getSelectedTags = (params) => {
   return new Set(params.size === 0 ? [] : params.get("tags")?.split("_"));
 };
 
-export const handleLogout = async (baseApiUrl, setUser) => {
-  await axios.post(baseApiUrl + "logout");
+export const handleLogout = async (setUser) => {
+  await axiosInstance.post("logout");
   await localStorage.clear();
   await setUser(null);
 };
@@ -78,14 +78,8 @@ export const handleEnterPress = (event, callback) => {
   }
 };
 
-export const formatLocation = (location) => {
-  return (
-    location?.city +
-    ", " +
-    location?.streetAddress +
-    ", " +
-    location?.postalCode
-  );
+export const formatVenue = (venue) => {
+  return `${venue?.name}, ${venue?.city}, ${venue?.address}, ${venue?.postalCode}`;
 };
 export const sliceArticleDescription = (description) => {
   if (description.length > 350) {
@@ -111,3 +105,7 @@ const validateInputs = (event, updateEvent) => {
     }
   });
 };
+
+export const axiosInstance = axios.create({
+  baseURL: "http://localhost:8080/api/v1/",
+});

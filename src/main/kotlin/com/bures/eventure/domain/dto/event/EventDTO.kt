@@ -10,6 +10,7 @@ import java.util.Date
 data class EventDTO(
     val id: ObjectId?,
     var creatorId: String,
+    var venueId: String,
     var title: String,
     var location: Location,
     var description: String,

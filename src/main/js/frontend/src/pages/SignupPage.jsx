@@ -1,29 +1,23 @@
 import React, { useState } from "react";
 
 import {
+  Button,
+  Center,
   FormControl,
-  VStack,
   FormLabel,
   Input,
-  Heading,
-  Center,
-  Button,
+  VStack,
 } from "@chakra-ui/react";
-import axios from "axios";
-import { apiUrl } from "../atoms";
-import { useRecoilValue } from "recoil";
-import { handleEnterPress, valuesAreEmpty } from "../utils/Utils";
-import { useNavigate } from "react-router-dom";
 import {
+  axiosInstance,
   errorHeading,
-  successHeading,
+  handleEnterPress,
   normalHeading,
-  handleUploadClick,
+  valuesAreEmpty,
 } from "../utils/Utils";
 import useRedirectToHomepage from "../utils/useRedirectToHomepage";
 
 function SignupPage(props) {
-  const baseApiUrl = useRecoilValue(apiUrl);
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -41,7 +35,7 @@ function SignupPage(props) {
       setError("Values cannot be empty");
     } else {
       try {
-        await axios.post(baseApiUrl + "register", newUser).then(() => {
+        await axiosInstance.post("register", newUser).then(() => {
           redirectWithDelay("/login");
         });
       } catch (error) {

@@ -1,5 +1,6 @@
 package com.bures.eventure.domain.controller
 
+import com.bures.eventure.domain.dto.response.GeneralResponse
 import com.bures.eventure.domain.dto.user.UserEventDetailsDTO
 import com.bures.eventure.domain.dto.user.UserDTO
 
@@ -35,8 +36,6 @@ class UserController(private val userRepository: UserRepository, private val use
         } else {
             ResponseEntity.notFound().build()
         }
-
-
     }
 
     @GetMapping("/details/{userId}")
@@ -69,11 +68,9 @@ class UserController(private val userRepository: UserRepository, private val use
 }
     @DeleteMapping("/{userId}")
     fun deleteUser(@PathVariable userId: String): ResponseEntity<Any>{
-        val success = userService.deleteUser(ObjectId(userId))
-        return if (success){
-            ResponseEntity.ok("Deleted!")
-        }else{
-            return ResponseEntity.notFound().build()
-        }
+       return when (userService.deleteUser(ObjectId(userId))){
+           GeneralResponse.Success -> ResponseEntity.ok().build()
+           GeneralResponse.NotFound -> ResponseEntity.notFound().build()
+       }
     }
 }

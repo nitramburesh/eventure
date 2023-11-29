@@ -1,33 +1,27 @@
 import {
+  Box,
+  Button,
   Center,
   Grid,
   Heading,
   HStack,
-  IconButton,
   Image,
   Input,
+  Tab,
+  TabList,
+  TabPanel,
+  TabPanels,
+  Tabs,
   Text,
   VStack,
-  Tabs,
-  TabList,
-  TabPanels,
-  Tab,
-  TabPanel,
-  Box,
-  Button,
 } from "@chakra-ui/react";
 
 import React, { useEffect, useRef, useState } from "react";
-import axios from "axios";
-import { apiUrl, userState } from "../atoms";
+import { userState } from "../atoms";
 import { useRecoilState, useRecoilValue } from "recoil";
-import Wrapper from "../components/Wrapper";
-import { BsCheck, BsPencilFill } from "react-icons/bs";
+import LoadingWrapper from "../components/LoadingWrapper";
 import Event from "../components/Event";
-import { useNavigate } from "react-router-dom";
-import { handleLogout, handleUploadClick } from "../utils/Utils";
-import { AiFillEdit } from "react-icons/ai";
-import { LiaUserEditSolid } from "react-icons/lia";
+import { axiosInstance, handleUploadClick } from "../utils/Utils";
 import { IoAddCircleOutline } from "react-icons/io5";
 import useDeleteUser from "../utils/useDeleteUser";
 
@@ -42,15 +36,14 @@ function UserPage() {
     likedEvents: [],
     attendedEvents: [],
   });
-  const baseApiUrl = useRecoilValue(apiUrl);
   const inputFile = useRef(null);
 
   const [user, setUser] = useRecoilState(userState);
   const { id } = useRecoilValue(userState);
   const { handleDeleteUser } = useDeleteUser();
   useEffect(() => {
-    axios
-      .get(baseApiUrl + `users/details/${id}`)
+    axiosInstance
+      .get(`users/details/${id}`)
       .then((response) => {
         setDetails(response.data);
         setIsLoading(false);
@@ -58,8 +51,8 @@ function UserPage() {
       .catch(() => setIsLoading(false));
   }, [isEditing, details.profilePicture]);
   const handleEditUsername = () => {
-    axios
-      .patch(baseApiUrl + `users/edit/username/${id}`, {
+    axiosInstance
+      .patch(`users/edit/username/${id}`, {
         username: details?.username,
       })
       .then(() => setIsEditing(false))
@@ -78,8 +71,8 @@ function UserPage() {
     setIsImageUploading(true);
     const profilePicture = new FormData();
     profilePicture.append("profilePicture", event.target.files[0]);
-    return await axios
-      .patch(baseApiUrl + `users/edit/profilePicture/${id}`, profilePicture, {
+    return await axiosInstance
+      .patch(`users/edit/profilePicture/${id}`, profilePicture, {
         headers: {
           "Content-Type": "multipart/form-data",
         },
@@ -87,7 +80,10 @@ function UserPage() {
       .then((response) => {
         setDetails({ ...details, profilePicture: response.data });
         setUser({ ...user, profilePicture: response.data });
-        localStorage.setItem("user", JSON.stringify(user));
+        localStorage.setItem(
+          "user",
+          JSON.stringify({ ...user, profilePicture: response.data }),
+        );
         setIsImageUploading(false);
       })
       .catch(() => setIsImageUploading(false));
@@ -104,7 +100,7 @@ function UserPage() {
   };
 
   return (
-    <Wrapper isLoading={isLoading}>
+    <LoadingWrapper isLoading={isLoading}>
       <VStack p="50px">
         <input
           type="file"
@@ -217,7 +213,7 @@ function UserPage() {
           </TabPanels>
         </Tabs>
       </VStack>
-    </Wrapper>
+    </LoadingWrapper>
   );
 }
 

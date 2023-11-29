@@ -1,16 +1,12 @@
 import { HStack, IconButton, Image, Text, VStack } from "@chakra-ui/react";
-import { formatDateTime } from "../utils/Utils";
+import { axiosInstance, formatDateTime } from "../utils/Utils";
 import { AiFillDelete } from "react-icons/ai";
 import React from "react";
-import axios from "axios";
-import { useRecoilValue } from "recoil";
-import { apiUrl } from "../atoms";
 
 const Comment = ({ comment, index, user, event, setEvent }) => {
-  const baseApiUrl = useRecoilValue(apiUrl);
   const handleDeleteComment = (commentId) => {
-    axios
-      .delete(baseApiUrl + `events/${event.id}/comments`, {
+    axiosInstance
+      .delete(`events/${event.id}/comments`, {
         data: {
           commentId,
         },
